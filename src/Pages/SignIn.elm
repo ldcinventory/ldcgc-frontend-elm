@@ -1,0 +1,364 @@
+module Pages.SignIn exposing (Model, Msg, page)
+
+import Css
+import Effect exposing (Effect)
+import Html.Styled exposing (a, button, div, form, h1, img, input, label, p, section, text)
+import Html.Styled.Attributes as Attr
+import Page exposing (Page)
+import Route exposing (Route)
+import Shared
+import Tailwind.Breakpoints as Bp
+import Tailwind.Theme as Tw
+import Tailwind.Utilities as Tw
+import View exposing (View)
+
+
+page : Shared.Model -> Route () -> Page Model Msg
+page shared route =
+    Page.new
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
+
+
+
+-- INIT
+
+
+type alias Model =
+    {}
+
+
+init : () -> ( Model, Effect Msg )
+init () =
+    ( {}
+    , Effect.none
+    )
+
+
+
+-- UPDATE
+
+
+type Msg
+    = NoOp
+
+
+update : Msg -> Model -> ( Model, Effect Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model
+            , Effect.none
+            )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+
+-- VIEW
+
+
+view : Model -> View Msg
+view model =
+    { title = "Pages.SignIn"
+    , body =
+        [ section
+            [ Attr.css
+                [ Tw.bg_color Tw.gray_50
+                ]
+            ]
+            [ div
+                [ Attr.css
+                    [ Tw.flex
+                    , Tw.flex_col
+                    , Tw.items_center
+                    , Tw.justify_center
+                    , Tw.px_6
+                    , Tw.py_8
+                    , Tw.mx_auto
+                    , Bp.lg
+                        [ Tw.py_0
+                        ]
+                    , Bp.md
+                        [ Tw.h_screen
+                        ]
+                    ]
+                ]
+                [ a
+                    [ Attr.href "#"
+                    , Attr.css
+                        [ Tw.flex
+                        , Tw.items_center
+                        , Tw.mb_6
+                        , Tw.text_2xl
+                        , Tw.font_semibold
+                        , Tw.text_color Tw.gray_900
+                        ]
+                    ]
+                    [ img
+                        [ Attr.css
+                            [ Tw.w_8
+                            , Tw.h_8
+                            , Tw.mr_2
+                            ]
+                        , Attr.src "https://avatars.githubusercontent.com/u/138709988?s=48&v=4"
+                        , Attr.alt "logo"
+                        ]
+                        []
+                    , text "LDC GC"
+                    ]
+                , div
+                    [ Attr.css
+                        [ Tw.w_full
+                        , Tw.bg_color Tw.white
+                        , Tw.rounded_lg
+                        , Tw.shadow
+                        , Bp.md
+                            [ Tw.mt_0
+                            ]
+                        , Bp.sm
+                            [ Tw.max_w_md
+                            ]
+                        , Bp.xl
+                            [ Tw.p_0
+                            ]
+                        ]
+                    ]
+                    [ div
+                        [ Attr.css
+                            [ Tw.p_6
+                            , Tw.space_y_4
+                            , Bp.md
+                                [ Tw.space_y_6
+                                ]
+                            , Bp.sm
+                                [ Tw.p_8
+                                ]
+                            ]
+                        ]
+                        [ h1
+                            [ Attr.css
+                                [ Tw.text_xl
+                                , Tw.font_bold
+                                , Tw.leading_tight
+                                , Tw.tracking_tight
+                                , Tw.text_color Tw.gray_900
+                                , Bp.md
+                                    [ Tw.text_2xl
+                                    ]
+                                ]
+                            ]
+                            [ text "Sign in to your account" ]
+                        , form
+                            [ Attr.css
+                                [ Tw.space_y_4
+                                , Bp.md
+                                    [ Tw.space_y_6
+                                    ]
+                                ]
+                            , Attr.action "#"
+                            ]
+                            [ div []
+                                [ label
+                                    [ Attr.for "email"
+                                    , Attr.css
+                                        [ Tw.block
+                                        , Tw.mb_2
+                                        , Tw.text_sm
+                                        , Tw.font_medium
+                                        , Tw.text_color Tw.gray_900
+                                        ]
+                                    ]
+                                    [ text "Your email" ]
+                                , input
+                                    [ Attr.type_ "email"
+                                    , Attr.name "email"
+                                    , Attr.id "email"
+                                    , Attr.css
+                                        [ Tw.bg_color Tw.gray_50
+                                        , Tw.border
+                                        , Tw.border_color Tw.gray_300
+                                        , Tw.text_color Tw.gray_900
+                                        , Tw.rounded_lg
+                                        , Tw.block
+                                        , Tw.w_full
+                                        , Tw.p_2_dot_5
+                                        , Css.focus
+                                            [ Tw.ring_color Tw.blue_600
+                                            , Tw.border_color Tw.blue_600
+                                            ]
+                                        , Bp.sm
+                                            [ Tw.text_sm
+                                            ]
+                                        ]
+                                    , Attr.placeholder "name@company.com"
+                                    , Attr.required True
+                                    ]
+                                    []
+                                ]
+                            , div []
+                                [ label
+                                    [ Attr.for "password"
+                                    , Attr.css
+                                        [ Tw.block
+                                        , Tw.mb_2
+                                        , Tw.text_sm
+                                        , Tw.font_medium
+                                        , Tw.text_color Tw.gray_900
+                                        ]
+                                    ]
+                                    [ text "Password" ]
+                                , input
+                                    [ Attr.type_ "password"
+                                    , Attr.name "password"
+                                    , Attr.id "password"
+                                    , Attr.placeholder "••••••••"
+                                    , Attr.css
+                                        [ Tw.bg_color Tw.gray_50
+                                        , Tw.border
+                                        , Tw.border_color Tw.gray_300
+                                        , Tw.text_color Tw.gray_900
+                                        , Tw.rounded_lg
+                                        , Tw.block
+                                        , Tw.w_full
+                                        , Tw.p_2_dot_5
+                                        , Css.focus
+                                            [ Tw.ring_color Tw.blue_600
+                                            , Tw.border_color Tw.blue_600
+                                            ]
+                                        , Bp.sm
+                                            [ Tw.text_sm
+                                            ]
+                                        ]
+                                    , Attr.required True
+                                    ]
+                                    []
+                                ]
+                            , div
+                                [ Attr.css
+                                    [ Tw.flex
+                                    , Tw.items_center
+                                    , Tw.justify_between
+                                    ]
+                                ]
+                                [ div
+                                    [ Attr.css
+                                        [ Tw.flex
+                                        , Tw.items_start
+                                        ]
+                                    ]
+                                    [ div
+                                        [ Attr.css
+                                            [ Tw.flex
+                                            , Tw.items_center
+                                            , Tw.h_5
+                                            ]
+                                        ]
+                                        [ input
+                                            [ Attr.id "remember"
+                                            , Attr.attribute "aria-describedby" "remember"
+                                            , Attr.type_ "checkbox"
+                                            , Attr.css
+                                                [ Tw.w_4
+                                                , Tw.h_4
+                                                , Tw.border
+                                                , Tw.border_color Tw.gray_300
+                                                , Tw.rounded
+                                                , Tw.bg_color Tw.gray_50
+                                                , Css.focus
+                                                    [ Tw.ring_2
+                                                    , Tw.ring_color Tw.blue_300
+                                                    ]
+                                                ]
+                                            , Attr.required True
+                                            ]
+                                            []
+                                        ]
+                                    , div
+                                        [ Attr.css
+                                            [ Tw.ml_3
+                                            , Tw.text_sm
+                                            ]
+                                        ]
+                                        [ label
+                                            [ Attr.for "remember"
+                                            , Attr.css
+                                                [ Tw.text_color Tw.gray_500
+                                                ]
+                                            ]
+                                            [ text "Remember me" ]
+                                        ]
+                                    ]
+                                , a
+                                    [ Attr.href "#"
+                                    , Attr.css
+                                        [ Tw.text_sm
+                                        , Tw.font_medium
+                                        , Tw.text_color Tw.blue_600
+                                        , Css.hover
+                                            [ Tw.underline
+                                            ]
+                                        ]
+                                    ]
+                                    [ text "Forgot password?" ]
+                                ]
+                            , button
+                                [ Attr.type_ "submit"
+                                , Attr.css
+                                    [ Tw.w_full
+                                    , Tw.text_color Tw.white
+                                    , Tw.bg_color Tw.blue_600
+                                    , Tw.font_medium
+                                    , Tw.rounded_lg
+                                    , Tw.text_sm
+                                    , Tw.px_5
+                                    , Tw.py_2_dot_5
+                                    , Tw.text_center
+                                    , Css.focus
+                                        [ Tw.ring_4
+                                        , Tw.outline_none
+                                        , Tw.ring_color Tw.blue_300
+                                        ]
+                                    , Css.hover
+                                        [ Tw.bg_color Tw.blue_700
+                                        ]
+                                    ]
+                                ]
+                                [ text "Sign in" ]
+                            , p
+                                [ Attr.css
+                                    [ Tw.text_sm
+                                    , Tw.font_light
+                                    , Tw.text_color Tw.gray_500
+                                    ]
+                                ]
+                                [ text "Don’t have an account yet?"
+                                , a
+                                    [ Attr.href "#"
+                                    , Attr.css
+                                        [ Tw.font_medium
+                                        , Tw.text_color Tw.blue_600
+                                        , Css.hover
+                                            [ Tw.underline
+                                            ]
+                                        ]
+                                    ]
+                                    [ text "Sign up" ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    }

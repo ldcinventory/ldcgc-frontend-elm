@@ -82,15 +82,19 @@ update msg model =
             )
 
         SignInApiResponded (Ok { signatureToken, headerPayloadToken }) ->
-            let
-                _ =
-                    Debug.log "(signatureToken, headerPayloadToken)" ( signatureToken, headerPayloadToken )
-            in
             ( { model | isSubmittingForm = False }
-            , Effect.none
+            , Effect.signIn
+                { signatureToken = signatureToken
+                , headerPayloadToken = headerPayloadToken
+                }
             )
 
         SignInApiResponded (Err httpError) ->
+            let
+                _ =
+                    -- TODO: handle properly the error message from the server!
+                    Debug.log "httpError" httpError
+            in
             ( { model | isSubmittingForm = False }
             , Effect.none
             )

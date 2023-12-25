@@ -1,9 +1,12 @@
 module Pages.SignIn exposing (Model, Msg, page)
 
+import Api.SignIn
 import Css
 import Effect exposing (Effect)
 import Html.Styled exposing (a, button, div, form, h1, img, input, label, p, section, text)
 import Html.Styled.Attributes as Attr
+import Html.Styled.Events as Events
+import Http
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
@@ -14,7 +17,7 @@ import View exposing (View)
 
 
 page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+page _ _ =
     Page.new
         { init = init
         , update = update
@@ -28,12 +31,15 @@ page shared route =
 
 
 type alias Model =
-    {}
+    { email : String
+    , password : String
+    , isSubmittingForm : Bool
+    }
 
 
 init : () -> ( Model, Effect Msg )
 init () =
-    ( {}
+    ( Model "" "" False
     , Effect.none
     )
 
@@ -43,14 +49,49 @@ init () =
 
 
 type Msg
-    = NoOp
+    = UserUpdatedInput Field String
+    | UserSubmittedForm
+    | SignInApiResponded (Result Http.Error Api.SignIn.Data)
+
+
+type Field
+    = Email
+    | Password
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model
+        UserUpdatedInput Email value ->
+            ( { model | email = value }
+            , Effect.none
+            )
+
+        UserUpdatedInput Password value ->
+            ( { model | password = value }
+            , Effect.none
+            )
+
+        UserSubmittedForm ->
+            ( { model | isSubmittingForm = True }
+            , Api.SignIn.post
+                { onResponse = SignInApiResponded
+                , email = model.email
+                , password = model.password
+                }
+            )
+
+        SignInApiResponded (Ok { signatureToken, headerPayloadToken }) ->
+            let
+                _ =
+                    Debug.log "(signatureToken, headerPayloadToken)" ( signatureToken, headerPayloadToken )
+            in
+            ( { model | isSubmittingForm = False }
+            , Effect.none
+            )
+
+        SignInApiResponded (Err httpError) ->
+            ( { model | isSubmittingForm = False }
             , Effect.none
             )
 
@@ -60,8 +101,8 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
+subscriptions =
+    always Sub.none
 
 
 
@@ -166,6 +207,7 @@ view model =
                                     [ Tw.space_y_6
                                     ]
                                 ]
+                            , Events.onSubmit UserSubmittedForm
                             , Attr.action "#"
                             ]
                             [ div []
@@ -203,6 +245,8 @@ view model =
                                         ]
                                     , Attr.placeholder "name@company.com"
                                     , Attr.required True
+                                    , Attr.value model.email
+                                    , Events.onInput (UserUpdatedInput Email)
                                     ]
                                     []
                                 ]
@@ -241,6 +285,8 @@ view model =
                                             ]
                                         ]
                                     , Attr.required True
+                                    , Attr.value model.password
+                                    , Events.onInput (UserUpdatedInput Password)
                                     ]
                                     []
                                 ]
@@ -280,7 +326,6 @@ view model =
                                                     , Tw.ring_color Tw.blue_300
                                                     ]
                                                 ]
-                                            , Attr.required True
                                             ]
                                             []
                                         ]
@@ -317,7 +362,7 @@ view model =
                                 , Attr.css
                                     [ Tw.w_full
                                     , Tw.text_color Tw.white
-                                    , Tw.bg_color Tw.blue_600
+                                    , Tw.bg_color Tw.orange_600 -- FIXME: fix preflight tailwind bugg for type=submit
                                     , Tw.font_medium
                                     , Tw.rounded_lg
                                     , Tw.text_sm
@@ -333,8 +378,16 @@ view model =
                                         [ Tw.bg_color Tw.blue_700
                                         ]
                                     ]
+                                , Attr.disabled model.isSubmittingForm
                                 ]
-                                [ text "Sign in" ]
+                                [ text <|
+                                    if model.isSubmittingForm then
+                                        -- FIXME: turn this into a spinner
+                                        "Signing in..."
+
+                                    else
+                                        "Sign in"
+                                ]
                             , p
                                 [ Attr.css
                                     [ Tw.text_sm

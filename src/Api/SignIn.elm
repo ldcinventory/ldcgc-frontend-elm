@@ -3,6 +3,7 @@ module Api.SignIn exposing (Data, post)
 import Effect exposing (Effect)
 import Http
 import Json.Decode as Decode
+import Json.Decode.Extra as Decode
 import Json.Encode as Encode
 
 
@@ -18,9 +19,9 @@ type alias Data =
 -}
 decoder : Decode.Decoder Data
 decoder =
-    Decode.map2 Data
-        (Decode.field "x-signature-token" Decode.string)
-        (Decode.field "x-header-payload-token" Decode.string)
+    Decode.succeed Data
+        |> Decode.andMap (Decode.field "x-signature-token" Decode.string)
+        |> Decode.andMap (Decode.field "x-header-payload-token" Decode.string)
 
 
 {-| Sends a POST request to our `/api/sign-in` endpoint, which
@@ -33,13 +34,13 @@ post :
     , password : String
     }
     -> Effect msg
-post options =
+post { email, password, onResponse } =
     let
         body : Encode.Value
         body =
             Encode.object
-                [ ( "email", Encode.string options.email )
-                , ( "password", Encode.string options.password )
+                [ ( "email", Encode.string email )
+                , ( "password", Encode.string password )
                 ]
 
         cmd : Cmd msg
@@ -47,7 +48,7 @@ post options =
             Http.post
                 { url = "http://localhost:8080/api/account/login"
                 , body = Http.jsonBody body
-                , expect = Http.expectJson options.onResponse decoder
+                , expect = Http.expectJson onResponse decoder
                 }
     in
     Effect.sendCmd cmd

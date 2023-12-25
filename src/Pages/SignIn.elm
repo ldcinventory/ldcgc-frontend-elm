@@ -405,6 +405,7 @@ view model =
                                     , Attr.css
                                         [ Tw.font_medium
                                         , Tw.text_color Tw.blue_600
+                                        , Tw.pl_1
                                         , Css.hover
                                             [ Tw.underline
                                             ]

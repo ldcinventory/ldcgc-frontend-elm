@@ -14,7 +14,8 @@ module Shared exposing
 
 import Dict
 import Effect exposing (Effect)
-import Json.Decode
+import Json.Decode as Decode
+import Json.Decode.Extra as Decode
 import Route exposing (Route)
 import Route.Path
 import Shared.Model
@@ -26,12 +27,16 @@ import Shared.Msg
 
 
 type alias Flags =
-    {}
+    { signatureToken : Maybe String
+    , headerPayloadToken : Maybe String
+    }
 
 
-decoder : Json.Decode.Decoder Flags
+decoder : Decode.Decoder Flags
 decoder =
-    Json.Decode.succeed {}
+    Decode.succeed Flags
+        |> Decode.andMap (Decode.field "signatureToken" (Decode.maybe Decode.string))
+        |> Decode.andMap (Decode.field "headerPayloadToken" (Decode.maybe Decode.string))
 
 
 
@@ -42,9 +47,17 @@ type alias Model =
     Shared.Model.Model
 
 
-init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
-init _ _ =
-    ( { signatureToken = Nothing, headerPayloadToken = Nothing }
+init : Result Decode.Error Flags -> Route () -> ( Model, Effect Msg )
+init flagsResult _ =
+    let
+        { signatureToken, headerPayloadToken } =
+            flagsResult
+                |> Result.withDefault
+                    { signatureToken = Nothing
+                    , headerPayloadToken = Nothing
+                    }
+    in
+    ( { signatureToken = signatureToken, headerPayloadToken = headerPayloadToken }
     , Effect.none
     )
 
@@ -65,17 +78,23 @@ update _ msg model =
                 | signatureToken = Just signatureToken
                 , headerPayloadToken = Just headerPayloadToken
               }
-            , Effect.pushRoute
-                { path = Route.Path.Home_
-                , query = Dict.empty
-                , hash = Nothing
-                }
+            , Effect.batch
+                [ Effect.pushRoute
+                    { path = Route.Path.Home_
+                    , query = Dict.empty
+                    , hash = Nothing
+                    }
+                , Effect.saveUser
+                    { signatureToken = signatureToken
+                    , headerPayloadToken = headerPayloadToken
+                    }
+                ]
             )
 
         Shared.Msg.SignOut ->
             ( { model | signatureToken = Nothing, headerPayloadToken = Nothing }
               -- TODO: we have an endpoint for this!
-            , Effect.none
+            , Effect.clearUser
             )
 
 

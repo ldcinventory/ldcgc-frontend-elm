@@ -52,10 +52,9 @@ post { email, password, onResponse } =
         cmd =
             Http.request
                 { method = "POST"
-                , headers = []
 
-                -- FIXME: Skipping EULA for now...
-                -- , headers = [ Http.header "skip-eula" "true" ]
+                -- Skipping EULA for now...
+                , headers = [ Http.header "skip-eula" "true" ]
                 , url = "http://localhost:8080/api/accounts/login"
                 , body = Http.jsonBody body
                 , expect = Http.expectStringResponse onResponse handleHttpResponse

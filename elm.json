@@ -15,6 +15,7 @@
             "elm/svg": "1.0.1",
             "elm/url": "1.0.0",
             "elm-community/json-extra": "4.3.0",
+            "ken-matsui/html-styled-extra": "1.0.1",
             "matheus23/elm-default-tailwind-modules": "4.0.1",
             "rtfeldman/elm-css": "18.0.0"
         },

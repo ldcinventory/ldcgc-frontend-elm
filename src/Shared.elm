@@ -74,6 +74,7 @@ update _ msg model =
 
         Shared.Msg.SignOut ->
             ( { model | signatureToken = Nothing, headerPayloadToken = Nothing }
+              -- TODO: we have an endpoint for this!
             , Effect.none
             )
 

@@ -7,7 +7,7 @@ import Effect exposing (Effect)
 import Html.Styled exposing (a, button, div, form, h1, img, input, label, section, text)
 import Html.Styled.Attributes as Attr
 import Html.Styled.Events as Events
-import Http
+import Html.Styled.Extra as Html
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
@@ -35,12 +35,13 @@ type alias Model =
     { email : String
     , password : String
     , isSubmittingForm : Bool
+    , errors : List Api.SignIn.Error
     }
 
 
 init : () -> ( Model, Effect Msg )
 init () =
-    ( Model "" "" False
+    ( Model "" "" False []
     , Effect.none
     )
 
@@ -52,7 +53,7 @@ init () =
 type Msg
     = UserUpdatedInput Field String
     | UserSubmittedForm
-    | SignInApiResponded (Result Http.Error Api.SignIn.Data)
+    | SignInApiResponded (Result (List Api.SignIn.Error) Api.SignIn.Data)
 
 
 type Field
@@ -74,7 +75,10 @@ update msg model =
             )
 
         UserSubmittedForm ->
-            ( { model | isSubmittingForm = True }
+            ( { model
+                | isSubmittingForm = True
+                , errors = []
+              }
             , Api.SignIn.post
                 { onResponse = SignInApiResponded
                 , email = model.email
@@ -90,13 +94,8 @@ update msg model =
                 }
             )
 
-        SignInApiResponded (Err httpError) ->
-            let
-                _ =
-                    -- TODO: handle properly the error message from the server!
-                    Debug.log "httpError" httpError
-            in
-            ( { model | isSubmittingForm = False }
+        SignInApiResponded (Err errors) ->
+            ( { model | isSubmittingForm = False, errors = errors }
             , Effect.none
             )
 
@@ -295,6 +294,17 @@ view model =
                                     ]
                                     []
                                 ]
+                            , List.head model.errors
+                                |> Html.viewMaybe
+                                    (\error ->
+                                        div
+                                            [ Attr.css
+                                                [ Tw.text_sm
+                                                , Tw.text_color Tw.red_500
+                                                ]
+                                            ]
+                                            [ text error.message ]
+                                    )
                             , div
                                 [ Attr.css
                                     [ Tw.flex

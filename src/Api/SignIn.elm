@@ -1,10 +1,12 @@
 module Api.SignIn exposing (Data, Error, post)
 
+import Dict
 import Effect exposing (Effect)
 import Http
 import Json.Decode as Decode
 import Json.Decode.Extra as Decode
 import Json.Encode as Encode
+import Maybe.Extra as Maybe
 
 
 {-| The data we expect if the sign in attempt was successful.
@@ -101,16 +103,15 @@ handleHttpResponse response =
                           }
                         ]
 
-        Http.GoodStatus_ _ body ->
-            case Decode.decodeString decoder body of
-                Ok data ->
-                    Ok data
-
-                Err _ ->
-                    Err
-                        [ { message = "Something unexpected happened decoding good status JSON"
-                          }
-                        ]
+        Http.GoodStatus_ { headers } body ->
+            -- TODO: decode the actual user from the app
+            Just Data
+                |> Maybe.andMap (Dict.get "x-signature-token" headers)
+                |> Maybe.andMap (Dict.get "x-header-payload-token" headers)
+                |> Result.fromMaybe
+                    [ { message = "Got no `headers` from the login backend response!"
+                      }
+                    ]
 
 
 errorsDecoder : Decode.Decoder (List Error)

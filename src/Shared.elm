@@ -14,7 +14,7 @@ module Shared exposing
 
 import Dict
 import Effect exposing (Effect)
-import Json.Decode as Decode
+import Json.Decode
 import Json.Decode.Extra as Decode
 import Route exposing (Route)
 import Route.Path
@@ -32,11 +32,11 @@ type alias Flags =
     }
 
 
-decoder : Decode.Decoder Flags
+decoder : Json.Decode.Decoder Flags
 decoder =
-    Decode.succeed Flags
-        |> Decode.andMap (Decode.field "signatureToken" (Decode.maybe Decode.string))
-        |> Decode.andMap (Decode.field "headerPayloadToken" (Decode.maybe Decode.string))
+    Json.Decode.succeed Flags
+        |> Decode.andMap (Json.Decode.field "signatureToken" (Json.Decode.maybe Json.Decode.string))
+        |> Decode.andMap (Json.Decode.field "headerPayloadToken" (Json.Decode.maybe Json.Decode.string))
 
 
 
@@ -47,7 +47,7 @@ type alias Model =
     Shared.Model.Model
 
 
-init : Result Decode.Error Flags -> Route () -> ( Model, Effect Msg )
+init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
 init flagsResult _ =
     let
         { signatureToken, headerPayloadToken } =
@@ -84,6 +84,8 @@ update _ msg model =
                     , query = Dict.empty
                     , hash = Nothing
                     }
+
+                -- FIXME: only save in localStorage if `Remember me?` is ✅
                 , Effect.saveUser
                     { signatureToken = signatureToken
                     , headerPayloadToken = headerPayloadToken

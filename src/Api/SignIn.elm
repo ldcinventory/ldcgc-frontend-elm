@@ -46,7 +46,7 @@ post { email, password, onResponse } =
         cmd : Cmd msg
         cmd =
             Http.post
-                { url = "http://localhost:8080/api/account/login"
+                { url = "http://localhost:8080/api/accounts/login"
                 , body = Http.jsonBody body
                 , expect = Http.expectJson onResponse decoder
                 }

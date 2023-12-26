@@ -1,9 +1,10 @@
 module Pages.SignIn exposing (Model, Msg, page)
 
 import Api.SignIn
+import Components.Spinner as Spinner
 import Css
 import Effect exposing (Effect)
-import Html.Styled exposing (a, button, div, form, h1, img, input, label, p, section, text)
+import Html.Styled exposing (a, button, div, form, h1, img, input, label, section, text)
 import Html.Styled.Attributes as Attr
 import Html.Styled.Events as Events
 import Http
@@ -115,7 +116,7 @@ subscriptions =
 
 view : Model -> View Msg
 view model =
-    { title = "Pages.SignIn"
+    { title = "LDC Login"
     , body =
         [ section
             [ Attr.css
@@ -381,37 +382,22 @@ view model =
                                     , Css.hover
                                         [ Tw.bg_color Tw.blue_700
                                         ]
+                                    , Css.disabled
+                                        [ Tw.opacity_50 ]
                                     ]
                                 , Attr.disabled model.isSubmittingForm
                                 ]
-                                [ text <|
-                                    if model.isSubmittingForm then
-                                        -- FIXME: turn this into a spinner
-                                        "Signing in..."
-
-                                    else
-                                        "Sign in"
-                                ]
-                            , p
-                                [ Attr.css
-                                    [ Tw.text_sm
-                                    , Tw.font_light
-                                    , Tw.text_color Tw.gray_500
-                                    ]
-                                ]
-                                [ text "Don’t have an account yet?"
-                                , a
-                                    [ Attr.href "#"
-                                    , Attr.css
-                                        [ Tw.font_medium
-                                        , Tw.text_color Tw.blue_600
-                                        , Tw.pl_1
-                                        , Css.hover
-                                            [ Tw.underline
+                                [ if model.isSubmittingForm then
+                                    Spinner.view
+                                        [ Attr.css
+                                            [ Tw.flex
+                                            , Tw.justify_center
+                                            , Tw.text_xs
                                             ]
                                         ]
-                                    ]
-                                    [ text "Sign up" ]
+
+                                  else
+                                    text "Sign in"
                                 ]
                             ]
                         ]

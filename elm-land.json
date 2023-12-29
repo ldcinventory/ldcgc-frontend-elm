@@ -16,7 +16,10 @@
         { "http-equiv": "X-UA-Compatible", "content": "IE=edge" },
         { "name": "viewport", "content": "width=device-width, initial-scale=1.0" }
       ],
-      "link": [],
+      "link": [
+        { "rel": "icon", "type": "image/png", "href": "/logo.png" },
+        { "rel": "stylesheet", "href": "//fonts.googleapis.com/css?family=Libre+Barcode+128&amp;lang=es" }
+      ],
       "script": []
     },
     "router": {

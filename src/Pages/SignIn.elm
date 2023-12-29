@@ -156,7 +156,7 @@ view model =
                             , Tw.h_8
                             , Tw.mr_2
                             ]
-                        , Attr.src "https://avatars.githubusercontent.com/u/138709988?s=48&v=4"
+                        , Attr.src "/logo.png"
                         , Attr.alt "logo"
                         ]
                         []

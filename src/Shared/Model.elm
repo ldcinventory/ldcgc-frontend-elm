@@ -1,4 +1,4 @@
-module Shared.Model exposing (Model)
+module Shared.Model exposing (Model, User)
 
 {-| Normally, this value would live in "Shared.elm"
 but that would lead to a circular dependency import cycle.
@@ -10,6 +10,16 @@ own file, so they can be imported by `Effect.elm`
 
 
 type alias Model =
-    { signatureToken : Maybe String
-    , headerPayloadToken : Maybe String
+    { user : Maybe User
+    }
+
+
+type alias User =
+    { signatureToken : String
+    , headerPayloadToken : String
+    , id : String
+
+    -- FIXME: , name : String
+    , role : String
+    , email : String
     }

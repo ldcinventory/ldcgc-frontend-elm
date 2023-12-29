@@ -27,16 +27,25 @@ import Shared.Msg
 
 
 type alias Flags =
-    { signatureToken : Maybe String
-    , headerPayloadToken : Maybe String
+    { user : Maybe Shared.Model.User
     }
 
 
 decoder : Json.Decode.Decoder Flags
 decoder =
     Json.Decode.succeed Flags
-        |> Decode.andMap (Json.Decode.field "signatureToken" (Json.Decode.maybe Json.Decode.string))
-        |> Decode.andMap (Json.Decode.field "headerPayloadToken" (Json.Decode.maybe Json.Decode.string))
+        |> Decode.andMap (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
+
+
+userDecoder : Json.Decode.Decoder Shared.Model.User
+userDecoder =
+    Json.Decode.succeed Shared.Model.User
+        |> Decode.andMap (Json.Decode.field "signatureToken" Json.Decode.string)
+        |> Decode.andMap (Json.Decode.field "headerPayloadToken" Json.Decode.string)
+        |> Decode.andMap (Json.Decode.field "id" Json.Decode.string)
+        -- |> Decode.andMap(Json.Decode.field "name" Json.Decode.string)
+        |> Decode.andMap (Json.Decode.field "role" Json.Decode.string)
+        |> Decode.andMap (Json.Decode.field "email" Json.Decode.string)
 
 
 
@@ -50,14 +59,12 @@ type alias Model =
 init : Result Json.Decode.Error Flags -> Route () -> ( Model, Effect Msg )
 init flagsResult _ =
     let
-        { signatureToken, headerPayloadToken } =
+        flags : Flags
+        flags =
             flagsResult
-                |> Result.withDefault
-                    { signatureToken = Nothing
-                    , headerPayloadToken = Nothing
-                    }
+                |> Result.withDefault { user = Nothing }
     in
-    ( { signatureToken = signatureToken, headerPayloadToken = headerPayloadToken }
+    ( { user = flags.user }
     , Effect.none
     )
 
@@ -73,10 +80,9 @@ type alias Msg =
 update : Route () -> Msg -> Model -> ( Model, Effect Msg )
 update _ msg model =
     case msg of
-        Shared.Msg.SignIn { signatureToken, headerPayloadToken } ->
+        Shared.Msg.SignIn user ->
             ( { model
-                | signatureToken = Just signatureToken
-                , headerPayloadToken = Just headerPayloadToken
+                | user = Just user
               }
             , Effect.batch
                 [ Effect.pushRoute
@@ -86,15 +92,12 @@ update _ msg model =
                     }
 
                 -- FIXME: only save in localStorage if `Remember me?` is ✅
-                , Effect.saveUser
-                    { signatureToken = signatureToken
-                    , headerPayloadToken = headerPayloadToken
-                    }
+                , Effect.saveUser user
                 ]
             )
 
         Shared.Msg.SignOut ->
-            ( { model | signatureToken = Nothing, headerPayloadToken = Nothing }
+            ( { model | user = Nothing }
               -- TODO: we have an endpoint for this!
             , Effect.clearUser
             )

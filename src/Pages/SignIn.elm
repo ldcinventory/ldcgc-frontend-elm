@@ -1,5 +1,6 @@
 module Pages.SignIn exposing (Model, Msg, page)
 
+import Api.Me
 import Api.SignIn
 import Components.Spinner as Spinner
 import Css
@@ -8,6 +9,7 @@ import Html.Styled exposing (a, button, div, form, h1, img, input, label, sectio
 import Html.Styled.Attributes as Attr
 import Html.Styled.Events as Events
 import Html.Styled.Extra as Html
+import Http
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
@@ -54,6 +56,7 @@ type Msg
     = UserUpdatedInput Field String
     | UserSubmittedForm
     | SignInApiResponded (Result (List Api.SignIn.Error) Api.SignIn.Data)
+    | MeApiResponded String String (Result Http.Error Api.Me.User)
 
 
 type Field
@@ -88,8 +91,9 @@ update msg model =
 
         SignInApiResponded (Ok { signatureToken, headerPayloadToken }) ->
             ( { model | isSubmittingForm = False }
-            , Effect.signIn
-                { signatureToken = signatureToken
+            , Api.Me.get
+                { onResponse = MeApiResponded signatureToken headerPayloadToken
+                , signatureToken = signatureToken
                 , headerPayloadToken = headerPayloadToken
                 }
             )
@@ -97,6 +101,34 @@ update msg model =
         SignInApiResponded (Err errors) ->
             ( { model | isSubmittingForm = False, errors = errors }
             , Effect.none
+            )
+
+        MeApiResponded signatureToken headerPayloadToken (Ok user) ->
+            ( { model | isSubmittingForm = False }
+            , Effect.signIn
+                { id = user.id
+                , role = user.role
+                , email = user.email
+                , signatureToken = signatureToken
+                , headerPayloadToken = headerPayloadToken
+                }
+            )
+
+        MeApiResponded _ _ (Err httpError) ->
+            let
+                _ =
+                    Debug.log "MeApiResponded" httpError
+
+                error : Api.SignIn.Error
+                error =
+                    { message = "User couldn't be found"
+                    }
+            in
+            ( { model
+                | isSubmittingForm = False
+                , errors = [ error ]
+              }
+            , Effect.signOut
             )
 
 

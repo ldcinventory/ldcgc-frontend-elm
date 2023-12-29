@@ -53,14 +53,24 @@ type Effect msg
 port sendToLocalStorage : { key : String, value : Encode.Value } -> Cmd msg
 
 
-saveUser : { signatureToken : String, headerPayloadToken : String } -> Effect msg
-saveUser token =
+saveUser :
+    { id : String
+    , role : String
+    , email : String
+    , signatureToken : String
+    , headerPayloadToken : String
+    }
+    -> Effect msg
+saveUser user =
     SendToLocalStorage
-        { key = "token"
+        { key = "user"
         , value =
-            Encode.list Encode.string
-                [ token.signatureToken
-                , token.headerPayloadToken
+            Encode.object
+                [ ( "signatureToken", Encode.string user.signatureToken )
+                , ( "headerPayloadToken", Encode.string user.headerPayloadToken )
+                , ( "id", Encode.string user.id )
+                , ( "role", Encode.string user.role )
+                , ( "email", Encode.string user.email )
                 ]
         }
 
@@ -68,7 +78,7 @@ saveUser token =
 clearUser : Effect msg
 clearUser =
     SendToLocalStorage
-        { key = "token"
+        { key = "user"
         , value = Encode.null
         }
 
@@ -242,12 +252,15 @@ toCmd options effect =
 
 
 signIn :
-    { signatureToken : String
+    { id : String
+    , role : String
+    , email : String
+    , signatureToken : String
     , headerPayloadToken : String
     }
     -> Effect msg
-signIn options =
-    SendSharedMsg (Shared.Msg.SignIn options)
+signIn user =
+    SendSharedMsg (Shared.Msg.SignIn user)
 
 
 signOut : Effect msg

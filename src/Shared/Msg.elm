@@ -13,5 +13,10 @@ type Msg
     = SignIn
         { signatureToken : String
         , headerPayloadToken : String
+        , id : String
+
+        -- FIXME: , name : String
+        , role : String
+        , email : String
         }
     | SignOut

@@ -329,6 +329,7 @@ view model =
                                             [ Attr.id "remember"
                                             , Attr.attribute "aria-describedby" "remember"
                                             , Attr.type_ "checkbox"
+                                            , Attr.checked True
                                             , Attr.css
                                                 [ Tw.w_4
                                                 , Tw.h_4

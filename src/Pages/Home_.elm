@@ -78,7 +78,7 @@ subscriptions model =
 
 view : Model -> View Msg
 view model =
-    { title = "LDC GC Homepage"
+    { title = "Dashboard"
     , body =
         [ Html.div
             [ Attr.style "font-family" "'Libre Barcode 128'"

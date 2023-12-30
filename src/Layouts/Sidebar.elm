@@ -8,6 +8,7 @@ import Layout exposing (Layout)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Tailwind.Theme as Tw
 import Tailwind.Utilities as Tw
 import View exposing (View)
 
@@ -98,9 +99,8 @@ view props route { toContentMsg, model, content } =
 viewSidebar : { user : Auth.User, route : Route () } -> Html msg
 viewSidebar { user, route } =
     Html.aside
-        [ Attr.class "is-flex is-flex-direction-column p-2"
+        [ Attr.css [ Tw.flex, Tw.flex_col, Tw.p_2, Tw.border_r, Tw.border_color Tw.gray_200 ]
         , Attr.style "min-width" "200px"
-        , Attr.style "border-right" "solid 1px #eee"
         ]
         [ viewAppNameAndLogo
         , viewSidebarLinks route
@@ -110,16 +110,18 @@ viewSidebar { user, route } =
 
 viewAppNameAndLogo : Html msg
 viewAppNameAndLogo =
-    Html.div [ Attr.class "is-flex p-3" ]
+    Html.div [ Attr.css [ Tw.flex, Tw.p_3, Tw.flex_col, Tw.items_center ] ]
         [ Html.figure []
             [ Html.img
-                [ Attr.src "https://bulma.io/images/placeholders/24x24.png"
-                , Attr.alt "My Cool App's logo"
+                [ Attr.src "/logo.png"
+                , Attr.alt "LDC GC Logo"
+                , Attr.width 100
                 ]
                 []
             ]
-        , Html.span [ Attr.class "has-text-weight-bold pl-2" ]
-            [ Html.text "My Cool App" ]
+        , Html.span
+            [ Attr.css [ Tw.font_bold, Tw.pl_2 ] ]
+            [ Html.text "LDC GC" ]
         ]
 
 
@@ -132,14 +134,14 @@ viewSidebarLinks route =
                 [ Html.a
                     [ Attr.fromUnstyled <| Route.Path.href path
                     , Attr.classList
-                        [ ( "is-active", route.path == path )
+                        [ ( "font-bold", route.path == path )
                         ]
                     ]
                     [ Html.text label ]
                 ]
     in
-    Html.div [ Attr.class "menu is-flex-grow-1" ]
-        [ Html.ul [ Attr.class "menu-list" ]
+    Html.div [ Attr.css [ Tw.flex, Tw.grow ] ]
+        [ Html.ul [ Attr.css [ Tw.list_none ] ]
             (List.map viewSidebarLink
                 [ ( "Dashboard", Route.Path.Home_ )
                 , ( "Volunteers", Route.Path.Volunteers )
@@ -151,23 +153,25 @@ viewSidebarLinks route =
 
 viewSignOutButton : Auth.User -> Html msg
 viewSignOutButton user =
-    Html.button [ Attr.class "button is-text is-fullwidth" ]
-        [ Html.div [ Attr.class "is-flex is-align-items-center" ]
-            [ Html.figure [ Attr.class "image is-24x24" ]
-                [ Html.text user.email
-                ]
-            , Html.span [ Attr.class "pl-2" ] [ Html.text "Sign out" ]
+    Html.button [ Attr.css [ Tw.w_full ] ]
+        [ Html.div [ Attr.css [ Tw.flex, Tw.items_center ] ]
+            [ Html.div [] [ Html.text user.email ]
+            , Html.span [ Attr.css [ Tw.pl_2 ] ] [ Html.text "Sign out" ]
             ]
         ]
 
 
 viewMainContent : { title : String, content : View msg } -> Html msg
 viewMainContent { title, content } =
-    Html.main_ [ Attr.class "is-flex is-flex-direction-column is-flex-grow-1" ]
-        [ Html.section [ Attr.class "hero is-info" ]
-            [ Html.div [ Attr.class "hero-body" ]
-                [ Html.h1 [ Attr.class "title" ] [ Html.text title ]
-                ]
+    Html.main_
+        [ Attr.css
+            [ Tw.flex, Tw.flex_col, Tw.grow ]
+        ]
+        [ Html.section
+            [ Attr.css [ Tw.p_4 ] ]
+            [ Html.div
+                [ Attr.css [ Tw.font_extrabold, Tw.text_2xl ] ]
+                [ Html.text title ]
             ]
-        , Html.div [ Attr.class "p-4" ] content.body
+        , Html.div [ Attr.css [ Tw.p_4 ] ] content.body
         ]

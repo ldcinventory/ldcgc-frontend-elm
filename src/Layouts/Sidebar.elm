@@ -1,9 +1,12 @@
 module Layouts.Sidebar exposing (Model, Msg, Props, layout)
 
+import Api.SignOut
 import Auth
 import Effect exposing (Effect)
 import Html.Styled as Html exposing (Html)
 import Html.Styled.Attributes as Attr
+import Html.Styled.Events as Events
+import Http exposing (Error(..))
 import Layout exposing (Layout)
 import Route exposing (Route)
 import Route.Path
@@ -23,7 +26,7 @@ layout : Props -> Shared.Model -> Route () -> Layout () Model Msg contentMsg
 layout props _ route =
     Layout.new
         { init = init
-        , update = update
+        , update = update props
         , view = view props route
         , subscriptions = subscriptions
         }
@@ -34,12 +37,14 @@ layout props _ route =
 
 
 type alias Model =
-    {}
+    { errors : List Http.Error
+    }
 
 
 init : () -> ( Model, Effect Msg )
 init _ =
-    ( {}
+    ( { errors = []
+      }
     , Effect.none
     )
 
@@ -49,20 +54,35 @@ init _ =
 
 
 type Msg
-    = ReplaceMe
+    = UserClickedSignOut
+    | SignOutApiResponded (Result Http.Error Api.SignOut.Data)
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Props -> Msg -> Model -> ( Model, Effect Msg )
+update props msg model =
     case msg of
-        ReplaceMe ->
+        UserClickedSignOut ->
             ( model
+            , Api.SignOut.post
+                { onResponse = SignOutApiResponded
+                , signatureToken = props.user.signatureToken
+                , headerPayloadToken = props.user.headerPayloadToken
+                }
+            )
+
+        SignOutApiResponded (Ok _) ->
+            ( model
+            , Effect.signOut
+            )
+
+        SignOutApiResponded (Err httpError) ->
+            ( { model | errors = httpError :: model.errors }
             , Effect.none
             )
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -79,7 +99,7 @@ view :
         , model : Model
         }
     -> View contentMsg
-view props route { toContentMsg, model, content } =
+view props route { toContentMsg, content, model } =
     { title = content.title ++ " | LDC GC"
     , body =
         [ Html.div [ Attr.css [ Tw.flex, Tw.h_screen ] ]
@@ -87,16 +107,21 @@ view props route { toContentMsg, model, content } =
                 { user = props.user
                 , route = route
                 }
+                |> Html.map toContentMsg
             , viewMainContent
                 { title = props.title
                 , content = content
                 }
+            , Html.div [ Attr.css [ Tw.text_color Tw.red_500 ] ] <|
+                List.map
+                    (Api.SignOut.errorToString >> Html.text)
+                    model.errors
             ]
         ]
     }
 
 
-viewSidebar : { user : Auth.User, route : Route () } -> Html msg
+viewSidebar : { user : Auth.User, route : Route () } -> Html Msg
 viewSidebar { user, route } =
     Html.aside
         [ Attr.css [ Tw.flex, Tw.flex_col, Tw.p_2, Tw.border_r, Tw.border_color Tw.gray_200 ]
@@ -151,9 +176,12 @@ viewSidebarLinks route =
         ]
 
 
-viewSignOutButton : Auth.User -> Html msg
+viewSignOutButton : Auth.User -> Html Msg
 viewSignOutButton user =
-    Html.button [ Attr.css [ Tw.w_full ] ]
+    Html.button
+        [ Attr.css [ Tw.w_full ]
+        , Events.onClick UserClickedSignOut
+        ]
         [ Html.div [ Attr.css [ Tw.flex, Tw.items_center ] ]
             [ Html.div [] [ Html.text user.email ]
             , Html.span [ Attr.css [ Tw.pl_2 ] ] [ Html.text "Sign out" ]

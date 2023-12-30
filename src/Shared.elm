@@ -98,7 +98,6 @@ update _ msg model =
 
         Shared.Msg.SignOut ->
             ( { model | user = Nothing }
-              -- TODO: we have an endpoint for this!
             , Effect.clearUser
             )
 

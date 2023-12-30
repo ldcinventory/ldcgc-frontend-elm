@@ -7,7 +7,7 @@ import Json.Decode.Extra as Decode
 
 
 type alias User =
-    { id : String
+    { id : Int
 
     -- , name : String FIXME: name is nested in volunteer.name/lastName!
     , role : String
@@ -17,11 +17,13 @@ type alias User =
 
 decoder : Decode.Decoder User
 decoder =
-    Decode.succeed User
-        |> Decode.andMap (Decode.field "id" Decode.string)
-        -- (Decode. "name" Decode.string)
-        |> Decode.andMap (Decode.field "role" Decode.string)
-        |> Decode.andMap (Decode.field "email" Decode.string)
+    Decode.field "data"
+        (Decode.succeed User
+            |> Decode.andMap (Decode.field "id" Decode.int)
+            -- (Decode. "name" Decode.string)
+            |> Decode.andMap (Decode.field "role" Decode.string)
+            |> Decode.andMap (Decode.field "email" Decode.string)
+        )
 
 
 get :
@@ -37,6 +39,8 @@ get options =
             , headers =
                 [ Http.header "x-signature-token" options.signatureToken
                 , Http.header "x-header-payload-token" options.headerPayloadToken
+
+                -- TODO: do the eula stuff so that we can remove this hack...
                 , Http.header "skip-eula" "true"
                 ]
             , url = "http://localhost:8080/api/users/me"

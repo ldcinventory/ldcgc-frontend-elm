@@ -17,7 +17,7 @@ type alias Model =
 type alias User =
     { signatureToken : String
     , headerPayloadToken : String
-    , id : String
+    , id : Int
 
     -- FIXME: , name : String
     , role : String

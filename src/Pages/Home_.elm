@@ -4,6 +4,7 @@ import Auth
 import Effect exposing (Effect)
 import Html.Styled as Html
 import Html.Styled.Attributes as Attr
+import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
@@ -18,6 +19,15 @@ page user shared route =
         , update = update
         , subscriptions = subscriptions
         , view = view
+        }
+        |> Page.withLayout (toLayout user)
+
+
+toLayout : Auth.User -> Model -> Layouts.Layout msg
+toLayout user model =
+    Layouts.Sidebar
+        { title = "Dashboard"
+        , user = user
         }
 
 

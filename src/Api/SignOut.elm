@@ -25,6 +25,7 @@ post :
     { onResponse : Result Http.Error Data -> msg
     , signatureToken : String
     , headerPayloadToken : String
+    , apiUrl : String
     }
     -> Effect msg
 post options =
@@ -33,7 +34,7 @@ post options =
         cmd =
             Http.request
                 { method = "POST"
-                , url = "http://localhost:8080/api/accounts/logout"
+                , url = options.apiUrl ++ "/accounts/logout"
                 , headers =
                     [ Http.header "x-signature-token" options.signatureToken
                     , Http.header "x-header-payload-token" options.headerPayloadToken

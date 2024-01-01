@@ -28,6 +28,7 @@ import Shared.Msg
 
 type alias Flags =
     { user : Maybe Shared.Model.User
+    , apiUrl : String
     }
 
 
@@ -35,6 +36,7 @@ decoder : Json.Decode.Decoder Flags
 decoder =
     Json.Decode.succeed Flags
         |> Decode.andMap (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
+        |> Decode.andMap (Json.Decode.field "apiUrl" Json.Decode.string)
 
 
 userDecoder : Json.Decode.Decoder Shared.Model.User
@@ -62,9 +64,9 @@ init flagsResult _ =
         flags : Flags
         flags =
             flagsResult
-                |> Result.withDefault { user = Nothing }
+                |> Result.withDefault { user = Nothing, apiUrl = "" }
     in
-    ( { user = flags.user }
+    ( { user = flags.user, apiUrl = flags.apiUrl }
     , Effect.none
     )
 

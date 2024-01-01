@@ -20,10 +20,10 @@ import View exposing (View)
 
 
 page : Shared.Model -> Route () -> Page Model Msg
-page _ _ =
+page shared _ =
     Page.new
         { init = init
-        , update = update
+        , update = update shared
         , subscriptions = subscriptions
         , view = view
         }
@@ -64,8 +64,8 @@ type Field
     | Password
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
+update shared msg model =
     case msg of
         UserUpdatedInput Email value ->
             ( { model | email = value }
@@ -86,6 +86,7 @@ update msg model =
                 { onResponse = SignInApiResponded
                 , email = model.email
                 , password = model.password
+                , apiUrl = shared.apiUrl
                 }
             )
 
@@ -95,6 +96,7 @@ update msg model =
                 { onResponse = MeApiResponded signatureToken headerPayloadToken
                 , signatureToken = signatureToken
                 , headerPayloadToken = headerPayloadToken
+                , apiUrl = shared.apiUrl
                 }
             )
 
@@ -137,8 +139,8 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions =
-    always Sub.none
+subscriptions _ =
+    Sub.none
 
 
 

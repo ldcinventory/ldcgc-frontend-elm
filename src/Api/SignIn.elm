@@ -39,9 +39,10 @@ post :
     { onResponse : Result (List Error) Data -> msg
     , email : String
     , password : String
+    , apiUrl : String
     }
     -> Effect msg
-post { email, password, onResponse } =
+post { email, password, onResponse, apiUrl } =
     let
         body : Encode.Value
         body =
@@ -57,7 +58,7 @@ post { email, password, onResponse } =
 
                 -- Skipping EULA for now...
                 , headers = [ Http.header "skip-eula" "true" ]
-                , url = "http://localhost:8080/api/accounts/login"
+                , url = apiUrl ++ "/accounts/login"
                 , body = Http.jsonBody body
                 , expect = Http.expectStringResponse onResponse handleHttpResponse
                 , timeout = Nothing

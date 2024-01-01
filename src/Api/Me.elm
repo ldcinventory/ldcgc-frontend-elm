@@ -30,6 +30,7 @@ get :
     { onResponse : Result Http.Error User -> msg
     , signatureToken : String
     , headerPayloadToken : String
+    , apiUrl : String
     }
     -> Effect msg
 get options =
@@ -43,7 +44,7 @@ get options =
                 -- TODO: do the eula stuff so that we can remove this hack...
                 , Http.header "skip-eula" "true"
                 ]
-            , url = "http://localhost:8080/api/users/me"
+            , url = options.apiUrl ++ "/users/me"
             , body = Http.emptyBody
             , expect = Http.expectJson options.onResponse decoder
             , timeout = Nothing

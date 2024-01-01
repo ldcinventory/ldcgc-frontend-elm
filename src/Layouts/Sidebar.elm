@@ -23,10 +23,10 @@ type alias Props =
 
 
 layout : Props -> Shared.Model -> Route () -> Layout () Model Msg contentMsg
-layout props _ route =
+layout props shared route =
     Layout.new
         { init = init
-        , update = update props
+        , update = update props shared
         , view = view props route
         , subscriptions = subscriptions
         }
@@ -58,8 +58,8 @@ type Msg
     | SignOutApiResponded (Result Http.Error Api.SignOut.Data)
 
 
-update : Props -> Msg -> Model -> ( Model, Effect Msg )
-update props msg model =
+update : Props -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
+update props shared msg model =
     case msg of
         UserClickedSignOut ->
             ( model
@@ -67,6 +67,7 @@ update props msg model =
                 { onResponse = SignOutApiResponded
                 , signatureToken = props.user.signatureToken
                 , headerPayloadToken = props.user.headerPayloadToken
+                , apiUrl = shared.apiUrl
                 }
             )
 

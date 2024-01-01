@@ -21,7 +21,7 @@ about deploying your app for free using Netlify or Vercel.
 - [ ] Remove the users/me endpoint (login returns that)
 - [ ] Add optional name from volunteers.name
 - [ ] Remove tailwind modules and use barebones tailwindcss
-- [ ] Pass NODE_ENV variables to Elm-Land 🌈
+- [x] Pass NODE_ENV variables to Elm-Land 🌈
 - [ ] Implement responsive sidebar menu
 - [ ] Add EULA acceptance pages
 - [ ] Implement volunteers page

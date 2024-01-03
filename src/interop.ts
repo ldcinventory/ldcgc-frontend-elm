@@ -1,3 +1,5 @@
+import "./styles.css";
+
 export const flags = ({ env }) => {
   // Called before our Elm application starts
   return {

@@ -2,13 +2,12 @@ module Pages.Home_ exposing (Model, Msg, page)
 
 import Auth
 import Effect exposing (Effect)
-import Html.Styled as Html
-import Html.Styled.Attributes as Attr
+import Html
+import Html.Attributes as Attr
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
-import Tailwind.Utilities as Tw
 import View exposing (View)
 
 
@@ -81,8 +80,7 @@ view model =
     { title = "Dashboard"
     , body =
         [ Html.div
-            [ Attr.style "font-family" "'Libre Barcode 128'"
-            , Attr.css [ Tw.text_4xl, Tw.text_center, Tw.mt_8 ]
+            [ Attr.class "text-4xl text-center mt-8 font-barcode"
             ]
             [ Html.text "Hello, world!"
             ]

@@ -1,0 +1,28 @@
+{
+  "name": "ldcgc-frontend-elm",
+  "version": "1.0.0",
+  "description": "LDC GC Frontend App built with Elm 🌳",
+  "main": "index.js",
+  "scripts": {
+    "start": "elm-land server",
+    "build": "elm-land build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutyel/ldcgc-frontend-elm.git"
+  },
+  "keywords": ["LDC"],
+  "author": "Flavio Corpa <flaviocorpa@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kutyel/ldcgc-frontend-elm/issues"
+  },
+  "homepage": "https://github.com/kutyel/ldcgc-frontend-elm#readme",
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "elm-land": "^0.19.4"
+  }
+}

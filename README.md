@@ -5,8 +5,7 @@
 ## Local development
 
 ```bash
-# Requires Node.js v18+ (https://nodejs.org)
-npx elm-land server
+npm start
 ```
 
 ## Deploying to production
@@ -20,7 +19,7 @@ about deploying your app for free using Netlify or Vercel.
 
 - [x] Remove the users/me endpoint (login returns that)
 - [x] Add optional name from volunteers.name
-- [ ] Remove tailwind modules and use barebones tailwindcss
+- [x] Remove tailwind modules and use barebones tailwindcss
 - [x] Pass NODE_ENV variables to Elm-Land 🌈
 - [ ] Implement responsive sidebar menu
 - [ ] Add EULA acceptance pages

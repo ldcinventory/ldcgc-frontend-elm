@@ -3,16 +3,15 @@ module Layouts.Sidebar exposing (Model, Msg, Props, layout)
 import Api.SignOut
 import Auth
 import Effect exposing (Effect)
-import Html.Styled as Html exposing (Html)
-import Html.Styled.Attributes as Attr
-import Html.Styled.Events as Events
+import Html exposing (Html)
+import Html.Attributes as Attr
+import Html.Events as Events
+import Html.Extra as Html
 import Http exposing (Error(..))
 import Layout exposing (Layout)
 import Route exposing (Route)
 import Route.Path
 import Shared
-import Tailwind.Theme as Tw
-import Tailwind.Utilities as Tw
 import View exposing (View)
 
 
@@ -103,7 +102,8 @@ view :
 view props route { toContentMsg, content, model } =
     { title = content.title ++ " | LDC GC"
     , body =
-        [ Html.div [ Attr.css [ Tw.flex, Tw.h_screen ] ]
+        [ Html.div
+            [ Attr.class "flex h-screen" ]
             [ viewSidebar
                 { user = props.user
                 , route = route
@@ -113,7 +113,7 @@ view props route { toContentMsg, content, model } =
                 { title = props.title
                 , content = content
                 }
-            , Html.div [ Attr.css [ Tw.text_color Tw.red_500 ] ] <|
+            , Html.div [ Attr.class "text-red-500" ] <|
                 List.map
                     (Api.SignOut.errorToString >> Html.text)
                     model.errors
@@ -125,8 +125,7 @@ view props route { toContentMsg, content, model } =
 viewSidebar : { user : Auth.User, route : Route () } -> Html Msg
 viewSidebar { user, route } =
     Html.aside
-        [ Attr.css [ Tw.flex, Tw.flex_col, Tw.p_2, Tw.border_r, Tw.border_color Tw.gray_200 ]
-        , Attr.style "min-width" "200px"
+        [ Attr.class "flex flex-col p-2 border-r border-gray-200 min-w-[200px]"
         ]
         [ viewAppNameAndLogo
         , viewSidebarLinks route
@@ -136,7 +135,9 @@ viewSidebar { user, route } =
 
 viewAppNameAndLogo : Html msg
 viewAppNameAndLogo =
-    Html.div [ Attr.css [ Tw.flex, Tw.p_3, Tw.flex_col, Tw.items_center ] ]
+    Html.div
+        [ Attr.class "flex items-center p-3 flex-col"
+        ]
         [ Html.figure []
             [ Html.img
                 [ Attr.src "/logo.png"
@@ -146,7 +147,7 @@ viewAppNameAndLogo =
                 []
             ]
         , Html.span
-            [ Attr.css [ Tw.font_bold, Tw.pl_2 ] ]
+            [ Attr.class "font-bold pl-2" ]
             [ Html.text "LDC GC" ]
         ]
 
@@ -158,7 +159,7 @@ viewSidebarLinks route =
         viewSidebarLink ( label, path ) =
             Html.li []
                 [ Html.a
-                    [ Attr.fromUnstyled <| Route.Path.href path
+                    [ Route.Path.href path
                     , Attr.classList
                         [ ( "font-bold", route.path == path )
                         ]
@@ -166,8 +167,9 @@ viewSidebarLinks route =
                     [ Html.text label ]
                 ]
     in
-    Html.div [ Attr.css [ Tw.flex, Tw.grow ] ]
-        [ Html.ul [ Attr.css [ Tw.list_none ] ]
+    Html.div [ Attr.class "flex grow" ]
+        [ Html.ul
+            [ Attr.class "list-none" ]
             (List.map viewSidebarLink
                 [ ( "Dashboard", Route.Path.Home_ )
                 , ( "Volunteers", Route.Path.Volunteers )
@@ -180,12 +182,31 @@ viewSidebarLinks route =
 viewSignOutButton : Auth.User -> Html Msg
 viewSignOutButton user =
     Html.button
-        [ Attr.css [ Tw.w_full ]
+        [ Attr.class "w-full"
         , Events.onClick UserClickedSignOut
         ]
-        [ Html.div [ Attr.css [ Tw.flex, Tw.items_center ] ]
+        [ Html.div [ Attr.class "flex items-center flex-col gap-2" ]
             [ Html.div [] [ Html.text user.email ]
-            , Html.span [ Attr.css [ Tw.pl_2 ] ] [ Html.text "Sign out" ]
+            , user.name |> Html.viewMaybe (\name -> Html.div [] [ Html.text name ])
+            , Html.button
+                [ Attr.class """
+                    w-full
+                    text-white
+                    bg-primary-600
+                    font-medium
+                    rounded-lg
+                    text-sm
+                    px-5
+                    py-2.5
+                    text-center
+                    focus:ring-4
+                    focus:outline-none
+                    focus:ring-primary-300
+                    hover:bg-primary-700
+                    disabled:opacity-50
+                    """
+                ]
+                [ Html.text "Sign out" ]
             ]
         ]
 
@@ -193,14 +214,13 @@ viewSignOutButton user =
 viewMainContent : { title : String, content : View msg } -> Html msg
 viewMainContent { title, content } =
     Html.main_
-        [ Attr.css
-            [ Tw.flex, Tw.flex_col, Tw.grow ]
+        [ Attr.class "flex grow flex-col"
         ]
         [ Html.section
-            [ Attr.css [ Tw.p_4 ] ]
+            [ Attr.class "p-4" ]
             [ Html.div
-                [ Attr.css [ Tw.font_extrabold, Tw.text_2xl ] ]
+                [ Attr.class "font-extrabold text-2xl" ]
                 [ Html.text title ]
             ]
-        , Html.div [ Attr.css [ Tw.p_4 ] ] content.body
+        , Html.div [ Attr.class "p-4" ] content.body
         ]

@@ -1,11 +1,9 @@
 module Components.Spinner exposing (view)
 
-import Html.Styled as Html exposing (Attribute, Html)
-import Html.Styled.Attributes as Attr
-import Svg.Styled as Svg
-import Svg.Styled.Attributes as SvgAttr
-import Tailwind.Theme as Tw
-import Tailwind.Utilities as Tw
+import Html exposing (Attribute, Html)
+import Html.Attributes as Attr
+import Svg
+import Svg.Attributes as SvgAttr
 
 
 view : List (Attribute msg) -> Html msg
@@ -14,13 +12,7 @@ view attrs =
         (Attr.attribute "role" "status" :: attrs)
         [ Svg.svg
             [ Attr.attribute "aria-hidden" "true"
-            , Attr.css
-                [ Tw.w_8
-                , Tw.h_8
-                , Tw.text_color Tw.gray_200
-                , Tw.animate_spin
-                , Tw.fill_color Tw.blue_600
-                ]
+            , Attr.class "w-8 h-8 animate-spin fill-primary-600"
             , SvgAttr.viewBox "0 0 100 101"
             , SvgAttr.fill "none"
             ]
@@ -36,9 +28,7 @@ view attrs =
                 []
             ]
         , Html.span
-            [ Attr.css
-                [ Tw.sr_only
-                ]
+            [ Attr.class "sr-only"
             ]
             [ Html.text "Loading..." ]
         ]

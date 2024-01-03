@@ -1,4 +1,4 @@
-module Api.SignIn exposing (Data, Error, post)
+module Api.SignIn exposing (Error, post)
 
 import Dict
 import Effect exposing (Effect)
@@ -7,13 +7,14 @@ import Json.Decode as Decode
 import Json.Decode.Extra as Decode
 import Json.Encode as Encode
 import Maybe.Extra as Maybe
+import Shared.Model
 
 
-{-| The data we expect if the sign in attempt was successful.
--}
-type alias Data =
-    { signatureToken : String
-    , headerPayloadToken : String
+type alias User =
+    { id : Int
+    , name : Maybe String
+    , role : String
+    , email : String
     }
 
 
@@ -22,13 +23,15 @@ type alias Error =
     }
 
 
-{-| How to create a `Data` value from JSON
--}
-decoder : Decode.Decoder Data
-decoder =
-    Decode.succeed Data
-        |> Decode.andMap (Decode.field "x-signature-token" Decode.string)
-        |> Decode.andMap (Decode.field "x-header-payload-token" Decode.string)
+userDecoder : Decode.Decoder User
+userDecoder =
+    Decode.field "data"
+        (Decode.succeed User
+            |> Decode.andMap (Decode.field "id" Decode.int)
+            |> Decode.andMap (Decode.optionalField "volunteer" (Decode.field "name" Decode.string))
+            |> Decode.andMap (Decode.field "role" Decode.string)
+            |> Decode.andMap (Decode.field "email" Decode.string)
+        )
 
 
 {-| Sends a POST request to our `/api/sign-in` endpoint, which
@@ -36,7 +39,7 @@ returns our JWT token if a user was found with that email
 and password.
 -}
 post :
-    { onResponse : Result (List Error) Data -> msg
+    { onResponse : Result (List Error) Shared.Model.User -> msg
     , email : String
     , password : String
     , apiUrl : String
@@ -56,7 +59,7 @@ post { email, password, onResponse, apiUrl } =
             Http.request
                 { method = "POST"
 
-                -- Skipping EULA for now...
+                -- FIXME: Skipping EULA for now...
                 , headers = [ Http.header "skip-eula" "true" ]
                 , url = apiUrl ++ "/accounts/login"
                 , body = Http.jsonBody body
@@ -72,7 +75,7 @@ post { email, password, onResponse, apiUrl } =
 -- HTTP Custom Error Handling
 
 
-handleHttpResponse : Http.Response String -> Result (List Error) Data
+handleHttpResponse : Http.Response String -> Result (List Error) Shared.Model.User
 handleHttpResponse response =
     case response of
         Http.BadUrl_ _ ->
@@ -105,14 +108,34 @@ handleHttpResponse response =
                         ]
 
         Http.GoodStatus_ { headers } body ->
-            -- TODO: decode the actual user from the app
-            Just Data
-                |> Maybe.andMap (Dict.get "x-signature-token" headers)
-                |> Maybe.andMap (Dict.get "x-header-payload-token" headers)
-                |> Result.fromMaybe
-                    [ { message = "Got no `headers` from the login backend response!"
-                      }
-                    ]
+            case Decode.decodeString userDecoder body of
+                Ok user ->
+                    case
+                        Maybe.map2 Tuple.pair
+                            (Dict.get "x-signature-token" headers)
+                            (Dict.get "x-header-payload-token" headers)
+                    of
+                        Just ( signatureToken, headerPayloadToken ) ->
+                            Ok <|
+                                Shared.Model.User
+                                    signatureToken
+                                    headerPayloadToken
+                                    user.id
+                                    user.name
+                                    user.role
+                                    user.email
+
+                        Nothing ->
+                            Err
+                                [ { message = "Got no `headers` from the login backend response!"
+                                  }
+                                ]
+
+                Err _ ->
+                    Err
+                        [ { message = "Something unexpected happened"
+                          }
+                        ]
 
 
 errorsDecoder : Decode.Decoder (List Error)

@@ -19,8 +19,7 @@ type alias User =
     { signatureToken : String
     , headerPayloadToken : String
     , id : Int
-
-    -- FIXME: , name : String
+    , name : Maybe String
     , role : String
     , email : String
     }

@@ -45,7 +45,7 @@ userDecoder =
         |> Decode.andMap (Json.Decode.field "signatureToken" Json.Decode.string)
         |> Decode.andMap (Json.Decode.field "headerPayloadToken" Json.Decode.string)
         |> Decode.andMap (Json.Decode.field "id" Json.Decode.int)
-        -- |> Decode.andMap(Json.Decode.field "name" Json.Decode.string)
+        |> Decode.andMap (Decode.optionalField "volunteer" (Json.Decode.field "name" Json.Decode.string))
         |> Decode.andMap (Json.Decode.field "role" Json.Decode.string)
         |> Decode.andMap (Json.Decode.field "email" Json.Decode.string)
 

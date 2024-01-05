@@ -12,7 +12,7 @@ view attrs =
         (Attr.attribute "role" "status" :: attrs)
         [ Svg.svg
             [ Attr.attribute "aria-hidden" "true"
-            , Attr.class "w-8 h-8 animate-spin fill-primary-600"
+            , SvgAttr.class "w-8 h-8 animate-spin fill-primary-600"
             , SvgAttr.viewBox "0 0 100 101"
             , SvgAttr.fill "none"
             ]

@@ -38,9 +38,6 @@ post options =
                 , headers =
                     [ Http.header "x-signature-token" options.signatureToken
                     , Http.header "x-header-payload-token" options.headerPayloadToken
-
-                    -- TODO: do the eula stuff so that we can remove this hack...
-                    , Http.header "skip-eula" "true"
                     ]
                 , body = Http.emptyBody
                 , expect = Http.expectStringResponse options.onResponse handleHttpResponse

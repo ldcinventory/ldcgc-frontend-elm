@@ -88,6 +88,7 @@ update _ msg model =
               }
             , Effect.batch
                 [ Effect.pushRoute
+                    -- TODO: if the user signed in and has not accepted EULA, redirect to it!
                     { path = Route.Path.Home_
                     , query = Dict.empty
                     , hash = Nothing

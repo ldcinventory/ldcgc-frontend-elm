@@ -1,10 +1,10 @@
-module Api.Eula exposing (Data, errorToString, get, put)
+module Api.Eula exposing (Action(..), Data, errorToString, get, put)
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
 import Json.Decode.Extra as Decode
-import Json.Encode as Encode
+import Url.Builder as Url
 
 
 type Action
@@ -100,7 +100,7 @@ get options =
         cmd =
             Http.request
                 { method = "GET"
-                , url = options.apiUrl ++ "/eula"
+                , url = Url.absolute [ options.apiUrl, "eula" ] []
                 , headers =
                     [ Http.header "x-signature-token" options.signatureToken
                     , Http.header "x-header-payload-token" options.headerPayloadToken
@@ -131,19 +131,15 @@ put options =
         cmd =
             Http.request
                 { method = "PUT"
-                , url = options.apiUrl ++ "/eula"
+                , url =
+                    Url.absolute
+                        [ options.apiUrl, "eula" ]
+                        [ Url.string "action" <| actionToString options.action ]
                 , headers =
                     [ Http.header "x-signature-token" options.signatureToken
                     , Http.header "x-header-payload-token" options.headerPayloadToken
                     ]
-                , body =
-                    Http.jsonBody
-                        (Encode.object
-                            [ ( "action"
-                              , Encode.string <| actionToString options.action
-                              )
-                            ]
-                        )
+                , body = Http.emptyBody
                 , expect = Http.expectStringResponse options.onResponse handleHttpResponse
                 , timeout = Nothing
                 , tracker = Nothing

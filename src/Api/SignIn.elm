@@ -56,16 +56,10 @@ post { email, password, onResponse, apiUrl } =
 
         cmd : Cmd msg
         cmd =
-            Http.request
-                { method = "POST"
-
-                -- FIXME: Skipping EULA for now...
-                , headers = [ Http.header "skip-eula" "true" ]
-                , url = apiUrl ++ "/accounts/login"
+            Http.post
+                { url = apiUrl ++ "/accounts/login"
                 , body = Http.jsonBody body
                 , expect = Http.expectStringResponse onResponse handleHttpResponse
-                , timeout = Nothing
-                , tracker = Nothing
                 }
     in
     Effect.sendCmd cmd
@@ -96,7 +90,12 @@ handleHttpResponse response =
                   }
                 ]
 
-        Http.BadStatus_ {- statusCode -} _ body ->
+        Http.BadStatus_ statusCode body ->
+            let
+                _ =
+                    -- TODO: if statusCode == 403 (Forbidden), redirect to body.location (api/eula)
+                    Debug.log "BadStatus_ statusCode" ( statusCode, body )
+            in
             case Decode.decodeString errorsDecoder body of
                 Ok errors ->
                     Err errors

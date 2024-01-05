@@ -1,11 +1,12 @@
 module Pages.Eula exposing (Model, Msg, page)
 
-import Api.Eula
+import Api.Eula exposing (Action(..))
 import Auth
 import Components.Spinner as Spinner
 import Effect exposing (Effect)
 import Html
 import Html.Attributes as Attr
+import Html.Events as Events
 import Http
 import Layouts
 import Page exposing (Page)
@@ -22,7 +23,7 @@ page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
 page user shared _ =
     Page.new
         { init = init user shared
-        , update = update
+        , update = update user shared
         , subscriptions = subscriptions
         , view = view
         }
@@ -63,23 +64,38 @@ init user shared () =
 
 
 type Msg
-    = EulaGetResponded (Result Http.Error Api.Eula.Data)
+    = PerformEulaAction Action
+    | EulaGetResponded (Result Http.Error Api.Eula.Data)
+    | EulaPutResponded (Result Http.Error Api.Eula.Data)
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
+update user shared msg model =
     case msg of
         EulaGetResponded result ->
             ( { model | data = RemoteData.fromResult result }
             , Effect.none
             )
 
+        PerformEulaAction action ->
+            ( model
+            , Api.Eula.put
+                { onResponse = EulaPutResponded
+                , action = action
+                , apiUrl = shared.apiUrl
+                , signatureToken = user.signatureToken
+                , headerPayloadToken = user.headerPayloadToken
+                }
+            )
+
+        EulaPutResponded result ->
+            -- FIXME: if user REJECTs EULA, sign out automatically!
+            ( { model | data = RemoteData.fromResult result }
+            , Effect.none
+            )
 
 
--- EulaGetResponded (Err httpError) ->
---     ( { model | backendMessage = "Error: " ++ Api.Eula.errorToString httpError }
---     , Effect.none
---     )
+
 -- SUBSCRIPTIONS
 
 
@@ -173,12 +189,14 @@ view model =
                             [ Attr.attribute "data-modal-hide" "default-modal"
                             , Attr.type_ "button"
                             , Attr.class "text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                            , Events.onClick <| PerformEulaAction Accept
                             ]
                             [ Html.text "I accept" ]
                         , Html.button
                             [ Attr.attribute "data-modal-hide" "default-modal"
                             , Attr.type_ "button"
                             , Attr.class "ms-3 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                            , Events.onClick <| PerformEulaAction Reject
                             ]
                             [ Html.text "Decline" ]
                         ]

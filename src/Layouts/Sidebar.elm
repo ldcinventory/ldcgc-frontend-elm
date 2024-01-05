@@ -222,5 +222,5 @@ viewMainContent { title, content } =
                 [ Attr.class "font-extrabold text-2xl" ]
                 [ Html.text title ]
             ]
-        , Html.div [ Attr.class "p-4" ] content.body
+        , Html.div [ Attr.class "p-4 h-full" ] content.body
         ]

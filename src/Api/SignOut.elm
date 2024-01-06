@@ -3,6 +3,8 @@ module Api.SignOut exposing (Data, errorToString, post)
 import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
+import Shared.Model
+import Url.Builder as Url
 
 
 {-| The data we expect if the sign in attempt was successful.
@@ -23,8 +25,7 @@ to notify the backend that the user has been signed out.
 -}
 post :
     { onResponse : Result Http.Error Data -> msg
-    , signatureToken : String
-    , headerPayloadToken : String
+    , tokens : Shared.Model.Tokens
     , apiUrl : String
     }
     -> Effect msg
@@ -34,13 +35,10 @@ post options =
         cmd =
             Http.request
                 { method = "POST"
-                , url = options.apiUrl ++ "/accounts/logout"
+                , url = Url.relative [ options.apiUrl, "accounts/logout" ] []
                 , headers =
-                    [ Http.header "x-signature-token" options.signatureToken
-                    , Http.header "x-header-payload-token" options.headerPayloadToken
-
-                    -- TODO: do the eula stuff so that we can remove this hack...
-                    , Http.header "skip-eula" "true"
+                    [ Http.header "x-signature-token" options.tokens.signatureToken
+                    , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
                 , expect = Http.expectStringResponse options.onResponse handleHttpResponse
@@ -71,7 +69,7 @@ handleHttpResponse response =
                 Err _ ->
                     Err <| BadBody "Something unexpected happened"
 
-        Http.GoodStatus_ { headers } body ->
+        Http.GoodStatus_ {- headers -} _ body ->
             case Decode.decodeString decoder body of
                 Ok success ->
                     Ok success

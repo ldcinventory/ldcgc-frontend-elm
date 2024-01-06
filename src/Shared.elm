@@ -39,11 +39,17 @@ decoder =
         |> Decode.andMap (Json.Decode.field "apiUrl" Json.Decode.string)
 
 
+tokensDecoder : Json.Decode.Decoder Shared.Model.Tokens
+tokensDecoder =
+    Json.Decode.succeed Shared.Model.Tokens
+        |> Decode.andMap (Json.Decode.field "signatureToken" Json.Decode.string)
+        |> Decode.andMap (Json.Decode.field "headerPayloadToken" Json.Decode.string)
+
+
 userDecoder : Json.Decode.Decoder Shared.Model.User
 userDecoder =
     Json.Decode.succeed Shared.Model.User
-        |> Decode.andMap (Json.Decode.field "signatureToken" Json.Decode.string)
-        |> Decode.andMap (Json.Decode.field "headerPayloadToken" Json.Decode.string)
+        |> Decode.andMap tokensDecoder
         |> Decode.andMap (Json.Decode.field "id" Json.Decode.int)
         |> Decode.andMap (Decode.optionalField "volunteer" (Json.Decode.field "name" Json.Decode.string))
         |> Decode.andMap (Json.Decode.field "role" Json.Decode.string)

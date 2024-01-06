@@ -64,8 +64,7 @@ update props shared msg model =
             ( model
             , Api.SignOut.post
                 { onResponse = SignOutApiResponded
-                , signatureToken = props.user.signatureToken
-                , headerPayloadToken = props.user.headerPayloadToken
+                , tokens = props.user.tokens
                 , apiUrl = shared.apiUrl
                 }
             )
@@ -103,7 +102,7 @@ view props route { toContentMsg, content, model } =
     { title = content.title ++ " | LDC GC"
     , body =
         [ Html.div
-            [ Attr.class "flex h-screen" ]
+            [ Attr.class "flex h-screen bg-color-gray-50 dark:bg-gray-900 dark:text-white" ]
             [ viewSidebar
                 { user = props.user
                 , route = route
@@ -125,7 +124,7 @@ view props route { toContentMsg, content, model } =
 viewSidebar : { user : Auth.User, route : Route () } -> Html Msg
 viewSidebar { user, route } =
     Html.aside
-        [ Attr.class "flex flex-col p-2 border-r border-gray-200 min-w-[200px]"
+        [ Attr.class "flex flex-col p-2 border-r border-gray-200 min-w-[200px] dark:border dark:border-gray-700"
         ]
         [ viewAppNameAndLogo
         , viewSidebarLinks route
@@ -181,13 +180,15 @@ viewSidebarLinks route =
 
 viewSignOutButton : Auth.User -> Html Msg
 viewSignOutButton user =
-    Html.button
-        [ Attr.class "w-full"
-        , Events.onClick UserClickedSignOut
-        ]
+    Html.div
+        [ Attr.class "w-full" ]
         [ Html.div [ Attr.class "flex items-center flex-col gap-2" ]
-            [ Html.div [] [ Html.text user.email ]
-            , user.name |> Html.viewMaybe (\name -> Html.div [] [ Html.text name ])
+            [ user.name
+                |> Html.viewMaybe
+                    (\name ->
+                        Html.div [] [ Html.text <| "Welcome, " ++ name ++ "! 👋🏻" ]
+                    )
+            , Html.div [] [ Html.text user.email ]
             , Html.button
                 [ Attr.class """
                     w-full
@@ -205,6 +206,7 @@ viewSignOutButton user =
                     hover:bg-primary-700
                     disabled:opacity-50
                     """
+                , Events.onClick UserClickedSignOut
                 ]
                 [ Html.text "Sign out" ]
             ]
@@ -222,5 +224,5 @@ viewMainContent { title, content } =
                 [ Attr.class "font-extrabold text-2xl" ]
                 [ Html.text title ]
             ]
-        , Html.div [ Attr.class "p-4" ] content.body
+        , Html.div [ Attr.class "p-4 h-full" ] content.body
         ]

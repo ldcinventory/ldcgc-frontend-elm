@@ -24,6 +24,7 @@ import Browser.Navigation
 import Dict exposing (Dict)
 import Html.Attributes exposing (value)
 import Json.Encode as Encode
+import Json.Encode.Extra as Encode
 import Route
 import Route.Path
 import Shared.Model
@@ -59,11 +60,20 @@ saveUser user =
         { key = "user"
         , value =
             Encode.object
-                [ ( "signatureToken", Encode.string user.signatureToken )
-                , ( "headerPayloadToken", Encode.string user.headerPayloadToken )
+                [ ( "signatureToken", Encode.string user.tokens.signatureToken )
+                , ( "headerPayloadToken", Encode.string user.tokens.headerPayloadToken )
                 , ( "id", Encode.int user.id )
                 , ( "role", Encode.string user.role )
                 , ( "email", Encode.string user.email )
+                , ( "volunteer"
+                  , Encode.maybe
+                        (\name ->
+                            Encode.object
+                                [ ( "name", Encode.string name )
+                                ]
+                        )
+                        user.name
+                  )
                 ]
         }
 

@@ -52,8 +52,7 @@ init user shared () =
     ( Model Loading
     , Api.Eula.get
         { onResponse = EulaGetResponded
-        , signatureToken = user.signatureToken
-        , headerPayloadToken = user.headerPayloadToken
+        , tokens = user.tokens
         , apiUrl = shared.apiUrl
         }
     )
@@ -83,8 +82,7 @@ update user shared msg model =
                 { onResponse = EulaPutResponded
                 , action = action
                 , apiUrl = shared.apiUrl
-                , signatureToken = user.signatureToken
-                , headerPayloadToken = user.headerPayloadToken
+                , tokens = user.tokens
                 }
             )
 

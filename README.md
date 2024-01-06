@@ -24,9 +24,11 @@ about deploying your app for free using Netlify or Vercel.
 - [x] Remove tailwind modules and use barebones tailwindcss
 - [x] Pass NODE_ENV variables to Elm-Land 🌈
 - [x] Add EULA acceptance pages
-- [ ] Encode/Decode Tokens as a standalone type
-- [ ] Put back dark mode in sign in page and sidebar!
+- [x] Encode/Decode Tokens as a standalone type
+- [x] Put back dark mode in sign in page and sidebar!
+- [ ] Only store user in localStorage if ✅ Remember me
 - [ ] Extract Components/Button and re-use it!
+- [ ] Implement password recovery workflow
 - [ ] Implement responsive sidebar menu
 - [ ] Implement volunteers page
 - [ ] Implement tools page

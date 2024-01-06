@@ -1,4 +1,4 @@
-module Shared.Model exposing (Model, User)
+module Shared.Model exposing (AppUser(..), Model, Tokens, User)
 
 {-| Normally, this value would live in "Shared.elm"
 but that would lead to a circular dependency import cycle.
@@ -15,9 +15,19 @@ type alias Model =
     }
 
 
-type alias User =
+type AppUser
+    = NotEulaAccepted Tokens
+    | ValidatedUser User
+
+
+type alias Tokens =
     { signatureToken : String
     , headerPayloadToken : String
+    }
+
+
+type alias User =
+    { tokens : Tokens
     , id : Int
     , name : Maybe String
     , role : String

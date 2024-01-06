@@ -1,6 +1,6 @@
 module Api.SignIn exposing (Error, post)
 
-import Dict
+import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Http
 import Json.Decode as Decode
@@ -8,6 +8,7 @@ import Json.Decode.Extra as Decode
 import Json.Encode as Encode
 import Maybe.Extra as Maybe
 import Shared.Model
+import Url.Builder as Url
 
 
 type alias User =
@@ -39,7 +40,7 @@ returns our JWT token if a user was found with that email
 and password.
 -}
 post :
-    { onResponse : Result (List Error) Shared.Model.User -> msg
+    { onResponse : Result (List Error) Shared.Model.AppUser -> msg
     , email : String
     , password : String
     , apiUrl : String
@@ -57,7 +58,7 @@ post { email, password, onResponse, apiUrl } =
         cmd : Cmd msg
         cmd =
             Http.post
-                { url = apiUrl ++ "/accounts/login"
+                { url = Url.relative [ apiUrl, "accounts/login" ] []
                 , body = Http.jsonBody body
                 , expect = Http.expectStringResponse onResponse handleHttpResponse
                 }
@@ -69,7 +70,14 @@ post { email, password, onResponse, apiUrl } =
 -- HTTP Custom Error Handling
 
 
-handleHttpResponse : Http.Response String -> Result (List Error) Shared.Model.User
+getTokensFromHeaders : Dict String String -> Maybe Shared.Model.Tokens
+getTokensFromHeaders headers =
+    Maybe.map2 Shared.Model.Tokens
+        (Dict.get "x-signature-token" headers)
+        (Dict.get "x-header-payload-token" headers)
+
+
+handleHttpResponse : Http.Response String -> Result (List Error) Shared.Model.AppUser
 handleHttpResponse response =
     case response of
         Http.BadUrl_ _ ->
@@ -90,39 +98,44 @@ handleHttpResponse response =
                   }
                 ]
 
-        Http.BadStatus_ statusCode body ->
-            let
-                _ =
-                    -- TODO: if statusCode == 403 (Forbidden), redirect to body.location (api/eula)
-                    Debug.log "BadStatus_ statusCode" ( statusCode, body )
-            in
-            case Decode.decodeString errorsDecoder body of
-                Ok errors ->
-                    Err errors
+        Http.BadStatus_ { headers, statusCode } body ->
+            case statusCode of
+                -- if Forbidden 403 -> Redirect to EULA acceptance page
+                403 ->
+                    case getTokensFromHeaders headers of
+                        Just tokens ->
+                            Ok <| Shared.Model.NotEulaAccepted tokens
 
-                Err _ ->
-                    Err
-                        [ { message = "Something unexpected happened"
-                          }
-                        ]
+                        Nothing ->
+                            Err
+                                [ { message = "Got no `headers` from the login backend response!"
+                                  }
+                                ]
+
+                _ ->
+                    case Decode.decodeString errorsDecoder body of
+                        Ok errors ->
+                            Err errors
+
+                        Err _ ->
+                            Err
+                                [ { message = "BadStatus: Something unexpected happened"
+                                  }
+                                ]
 
         Http.GoodStatus_ { headers } body ->
             case Decode.decodeString userDecoder body of
                 Ok user ->
-                    case
-                        Maybe.map2 Tuple.pair
-                            (Dict.get "x-signature-token" headers)
-                            (Dict.get "x-header-payload-token" headers)
-                    of
-                        Just ( signatureToken, headerPayloadToken ) ->
+                    case getTokensFromHeaders headers of
+                        Just tokens ->
                             Ok <|
-                                Shared.Model.User
-                                    signatureToken
-                                    headerPayloadToken
-                                    user.id
-                                    user.name
-                                    user.role
-                                    user.email
+                                Shared.Model.ValidatedUser <|
+                                    Shared.Model.User
+                                        tokens
+                                        user.id
+                                        user.name
+                                        user.role
+                                        user.email
 
                         Nothing ->
                             Err

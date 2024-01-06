@@ -64,8 +64,7 @@ update props shared msg model =
             ( model
             , Api.SignOut.post
                 { onResponse = SignOutApiResponded
-                , signatureToken = props.user.signatureToken
-                , headerPayloadToken = props.user.headerPayloadToken
+                , tokens = props.user.tokens
                 , apiUrl = shared.apiUrl
                 }
             )
@@ -103,7 +102,7 @@ view props route { toContentMsg, content, model } =
     { title = content.title ++ " | LDC GC"
     , body =
         [ Html.div
-            [ Attr.class "flex h-screen" ]
+            [ Attr.class "flex h-screen bg-color-gray-50 dark:bg-gray-900 dark:text-white" ]
             [ viewSidebar
                 { user = props.user
                 , route = route
@@ -125,7 +124,7 @@ view props route { toContentMsg, content, model } =
 viewSidebar : { user : Auth.User, route : Route () } -> Html Msg
 viewSidebar { user, route } =
     Html.aside
-        [ Attr.class "flex flex-col p-2 border-r border-gray-200 min-w-[200px]"
+        [ Attr.class "flex flex-col p-2 border-r border-gray-200 min-w-[200px] dark:border dark:border-gray-700"
         ]
         [ viewAppNameAndLogo
         , viewSidebarLinks route

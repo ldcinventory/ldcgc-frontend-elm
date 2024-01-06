@@ -2,6 +2,7 @@ module Pages.SignIn exposing (Model, Msg, page)
 
 import Api.SignIn
 import Components.Spinner as Spinner
+import Dict
 import Effect exposing (Effect)
 import Html exposing (a, button, div, form, h1, img, input, label, section, text)
 import Html.Attributes as Attr
@@ -9,8 +10,9 @@ import Html.Events as Events
 import Html.Extra as Html
 import Page exposing (Page)
 import Route exposing (Route)
+import Route.Path
 import Shared
-import Shared.Model
+import Shared.Model exposing (AppUser(..))
 import View exposing (View)
 
 
@@ -50,7 +52,7 @@ init () =
 type Msg
     = UserUpdatedInput Field String
     | UserSubmittedForm
-    | SignInApiResponded (Result (List Api.SignIn.Error) Shared.Model.User)
+    | SignInApiResponded (Result (List Api.SignIn.Error) Shared.Model.AppUser)
 
 
 type Field
@@ -84,9 +86,23 @@ update shared msg model =
                 }
             )
 
-        SignInApiResponded (Ok user) ->
+        SignInApiResponded (Ok (ValidatedUser user)) ->
             ( { model | isSubmittingForm = False }
             , Effect.signIn user
+            )
+
+        SignInApiResponded (Ok (NotEulaAccepted tokens)) ->
+            let
+                _ =
+                    -- TODO: do something with the tokens!
+                    Debug.log "NotEulaAccepted" tokens
+            in
+            ( { model | isSubmittingForm = False }
+            , Effect.pushRoute
+                { path = Route.Path.Eula
+                , query = Dict.empty
+                , hash = Nothing
+                }
             )
 
         SignInApiResponded (Err errors) ->
@@ -113,14 +129,14 @@ view model =
     { title = "LDC Login"
     , body =
         [ section
-            [ Attr.class "bg-folor-gray-50"
+            [ Attr.class "bg-color-gray-50 dark:bg-gray-900"
             ]
             [ div
                 [ Attr.class "flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0 md:h-screen"
                 ]
                 [ a
                     [ Attr.href "#"
-                    , Attr.class "flex items-center mb-6 text-2xl font-semibold text-gray-900"
+                    , Attr.class "flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
                     ]
                     [ img
                         [ Attr.class "w-8 h-8 mr-2"
@@ -131,7 +147,7 @@ view model =
                     , text "LDC GC"
                     ]
                 , div
-                    [ Attr.class "w-full bg-color-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0"
+                    [ Attr.class "w-full bg-color-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700"
                     ]
                     [ div
                         [ Attr.class "p-6 space-y-4 md:space-y-6 sm:p-9"
@@ -144,6 +160,7 @@ view model =
                                 tracking-tight
                                 text-gray-900
                                 md:text-2xl
+                                dark:text-white
                                 """
                             ]
                             [ text "Sign in to your account" ]
@@ -161,6 +178,7 @@ view model =
                                         text-sm
                                         font-medium
                                         text-gray-900
+                                        dark:text-white
                                         """
                                     ]
                                     [ text "Your email" ]
@@ -180,6 +198,12 @@ view model =
                                         focus:ring-primary-600
                                         focus:border-primary-600
                                         sm:text-sm
+                                        dark:bg-gray-700
+                                        dark:border-gray-600
+                                        dark:placeholder-gray-400
+                                        dark:text-white
+                                        dark:focus:ring-blue-500
+                                        dark:focus:border-blue-500
                                         """
                                     , Attr.placeholder "name@domain.com"
                                     , Attr.required True
@@ -197,6 +221,7 @@ view model =
                                         text-sm
                                         font-medium
                                         text-gray-900
+                                        dark:text-white
                                         """
                                     ]
                                     [ text "Password" ]
@@ -217,6 +242,12 @@ view model =
                                         focus:ring-primary-600
                                         focus:border-primary-600
                                         sm:text-sm
+                                        dark:bg-gray-700
+                                        dark:border-gray-600
+                                        dark:placeholder-gray-400
+                                        dark:text-white
+                                        dark:focus:ring-blue-500
+                                        dark:focus:border-blue-500
                                         """
                                     , Attr.required True
                                     , Attr.value model.password
@@ -255,6 +286,10 @@ view model =
                                                 bg-color-gray-50
                                                 focus:ring-2
                                                 focus:ring-color-blue-300
+                                                dark:bg-gray-700
+                                                dark:border-gray-600
+                                                dark:focus:ring-primary-600
+                                                dark:ring-offset-gray-800
                                                 """
                                             ]
                                             []
@@ -264,7 +299,7 @@ view model =
                                         ]
                                         [ label
                                             [ Attr.for "remember"
-                                            , Attr.class "text-gray-500"
+                                            , Attr.class "text-gray-500 dark:text-gray-300"
                                             ]
                                             [ text "Remember me" ]
                                         ]
@@ -276,6 +311,7 @@ view model =
                                         font-medium
                                         text-primary-600
                                         hover:underline
+                                        dark:text-gray-500
                                         """
                                     ]
                                     [ text "Forgot password?" ]
@@ -297,6 +333,9 @@ view model =
                                     focus:ring-primary-300
                                     hover:bg-primary-700
                                     disabled:opacity-50
+                                    dark:bg-primary-600
+                                    dark:hover:bg-primary-700
+                                    dark:focus:ring-primary-800
                                     """
                                 , Attr.disabled model.isSubmittingForm
                                 ]

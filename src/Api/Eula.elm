@@ -4,6 +4,7 @@ import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
 import Json.Decode.Extra as Decode
+import Shared.Model
 import Url.Builder as Url
 
 
@@ -89,8 +90,7 @@ to notify the backend that the user has been signed out.
 -}
 get :
     { onResponse : Result Http.Error Data -> msg
-    , signatureToken : String
-    , headerPayloadToken : String
+    , tokens : Shared.Model.Tokens
     , apiUrl : String
     }
     -> Effect msg
@@ -100,10 +100,10 @@ get options =
         cmd =
             Http.request
                 { method = "GET"
-                , url = Url.absolute [ options.apiUrl, "eula" ] []
+                , url = Url.relative [ options.apiUrl, "eula" ] []
                 , headers =
-                    [ Http.header "x-signature-token" options.signatureToken
-                    , Http.header "x-header-payload-token" options.headerPayloadToken
+                    [ Http.header "x-signature-token" options.tokens.signatureToken
+                    , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
                 , expect = Http.expectStringResponse options.onResponse handleHttpResponse
@@ -119,8 +119,7 @@ to notify the backend that the user has been signed out.
 -}
 put :
     { onResponse : Result Http.Error Data -> msg
-    , signatureToken : String
-    , headerPayloadToken : String
+    , tokens : Shared.Model.Tokens
     , apiUrl : String
     , action : Action
     }
@@ -132,12 +131,12 @@ put options =
             Http.request
                 { method = "PUT"
                 , url =
-                    Url.absolute
+                    Url.relative
                         [ options.apiUrl, "eula" ]
                         [ Url.string "action" <| actionToString options.action ]
                 , headers =
-                    [ Http.header "x-signature-token" options.signatureToken
-                    , Http.header "x-header-payload-token" options.headerPayloadToken
+                    [ Http.header "x-signature-token" options.tokens.signatureToken
+                    , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
                 , expect = Http.expectStringResponse options.onResponse handleHttpResponse
@@ -166,7 +165,7 @@ handleHttpResponse response =
                     Err <| BadBody errors
 
                 Err _ ->
-                    Err <| BadBody "Something unexpected happened"
+                    Err <| BadBody "BadStatus: Something unexpected happened"
 
         Http.GoodStatus_ _ body ->
             case Decode.decodeString decoder body of
@@ -174,7 +173,7 @@ handleHttpResponse response =
                     Ok success
 
                 Err _ ->
-                    Err <| BadBody "Something unexpected happened"
+                    Err <| BadBody "GoodStatus: Something unexpected happened"
 
 
 errorToString : Http.Error -> String

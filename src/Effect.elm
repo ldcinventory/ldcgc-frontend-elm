@@ -59,8 +59,8 @@ saveUser user =
         { key = "user"
         , value =
             Encode.object
-                [ ( "signatureToken", Encode.string user.signatureToken )
-                , ( "headerPayloadToken", Encode.string user.headerPayloadToken )
+                [ ( "signatureToken", Encode.string user.tokens.signatureToken )
+                , ( "headerPayloadToken", Encode.string user.tokens.headerPayloadToken )
                 , ( "id", Encode.int user.id )
                 , ( "role", Encode.string user.role )
                 , ( "email", Encode.string user.email )

@@ -24,6 +24,7 @@ import Browser.Navigation
 import Dict exposing (Dict)
 import Html.Attributes exposing (value)
 import Json.Encode as Encode
+import Json.Encode.Extra as Encode
 import Route
 import Route.Path
 import Shared.Model
@@ -64,9 +65,15 @@ saveUser user =
                 , ( "id", Encode.int user.id )
                 , ( "role", Encode.string user.role )
                 , ( "email", Encode.string user.email )
-
-                -- FIXME: encode name if we have it
-                -- , ( "name", Encode.string user.name )
+                , ( "volunteer"
+                  , Encode.maybe
+                        (\name ->
+                            Encode.object
+                                [ ( "name", Encode.string name )
+                                ]
+                        )
+                        user.name
+                  )
                 ]
         }
 

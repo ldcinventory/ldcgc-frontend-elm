@@ -26,6 +26,7 @@ about deploying your app for free using Netlify or Vercel.
 - [x] Add EULA acceptance pages
 - [x] Encode/Decode Tokens as a standalone type
 - [x] Put back dark mode in sign in page and sidebar!
+- [ ] Customise NotFound 404 page
 - [ ] Only store user in localStorage if ✅ Remember me
 - [ ] Extract Components/Button and re-use it!
 - [ ] Implement password recovery workflow

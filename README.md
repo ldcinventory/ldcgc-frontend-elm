@@ -28,6 +28,7 @@ about deploying your app for free using Netlify or Vercel.
 - [x] Put back dark mode in sign in page and sidebar!
 - [ ] Customise NotFound 404 page
 - [ ] Only store user in localStorage if ✅ Remember me
+- [ ] Extract Components/Modal and re-use it!
 - [ ] Extract Components/Button and re-use it!
 - [ ] Implement password recovery workflow
 - [ ] Implement responsive sidebar menu

@@ -62,6 +62,7 @@ init () =
 
 type Msg
     = UserSubmittedForm
+    | CloseModal
     | PerformEulaAction Action Shared.Model.Tokens
     | UserUpdatedInput Field String
     | EulaGetResponded (Result Http.Error EulaData)
@@ -77,6 +78,11 @@ type Field
 update : Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update shared msg model =
     case msg of
+        CloseModal ->
+            ( { model | eulaData = NotAsked }
+            , Effect.none
+            )
+
         UserUpdatedInput Email value ->
             ( { model | email = value }
             , Effect.none
@@ -199,6 +205,7 @@ view model =
                             [ Attr.type_ "button"
                             , Attr.class "text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
                             , Attr.attribute "data-modal-hide" "default-modal"
+                            , Events.onClick CloseModal
                             ]
                             [ Svg.svg
                                 [ SvgAttr.class "w-3 h-3"

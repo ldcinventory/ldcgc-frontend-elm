@@ -145,8 +145,6 @@ update shared msg model =
             )
 
         EulaPutResponded (Ok _) ->
-            -- FIXME: if user ACCEPTs EULA, fetch users/me and call Effect.signIn
-            -- FIXME: if user REJECTs EULA, call Effect.signOut
             ( model
             , Effect.none
             )

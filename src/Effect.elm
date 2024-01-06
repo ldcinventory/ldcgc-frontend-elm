@@ -64,6 +64,9 @@ saveUser user =
                 , ( "id", Encode.int user.id )
                 , ( "role", Encode.string user.role )
                 , ( "email", Encode.string user.email )
+
+                -- FIXME: encode name if we have it
+                -- , ( "name", Encode.string user.name )
                 ]
         }
 

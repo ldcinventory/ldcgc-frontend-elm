@@ -180,13 +180,15 @@ viewSidebarLinks route =
 
 viewSignOutButton : Auth.User -> Html Msg
 viewSignOutButton user =
-    Html.button
-        [ Attr.class "w-full"
-        , Events.onClick UserClickedSignOut
-        ]
+    Html.div
+        [ Attr.class "w-full" ]
         [ Html.div [ Attr.class "flex items-center flex-col gap-2" ]
-            [ Html.div [] [ Html.text user.email ]
-            , user.name |> Html.viewMaybe (\name -> Html.div [] [ Html.text name ])
+            [ user.name
+                |> Html.viewMaybe
+                    (\name ->
+                        Html.div [] [ Html.text <| "Welcome, " ++ name ++ "! 👋🏻" ]
+                    )
+            , Html.div [] [ Html.text user.email ]
             , Html.button
                 [ Attr.class """
                     w-full
@@ -204,6 +206,7 @@ viewSignOutButton user =
                     hover:bg-primary-700
                     disabled:opacity-50
                     """
+                , Events.onClick UserClickedSignOut
                 ]
                 [ Html.text "Sign out" ]
             ]

@@ -211,6 +211,7 @@ view model =
                 ]
 
             Failure httpError ->
+                -- FIXME: do something with volunteer errors!
                 [ Html.text "Something went wrong..."
                 ]
 

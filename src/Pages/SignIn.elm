@@ -1,6 +1,7 @@
 module Pages.SignIn exposing (Model, Msg, page)
 
 import Api.SignIn exposing (Action(..), EulaData)
+import Components.Button as Button
 import Components.Spinner as Spinner
 import Effect exposing (Effect)
 import Html
@@ -464,38 +465,22 @@ view model =
                                     ]
                                     [ Html.text "Forgot password?" ]
                                 ]
-                            , Html.button
-                                [ Attr.type_ "submit"
-                                , Attr.class """
-                                    w-full
-                                    text-white
-                                    bg-primary-600
-                                    font-medium
-                                    rounded-lg
-                                    text-sm
-                                    px-5
-                                    py-2.5
-                                    text-center
-                                    focus:ring-4
-                                    focus:outline-none
-                                    focus:ring-primary-300
-                                    hover:bg-primary-700
-                                    disabled:opacity-50
-                                    dark:bg-primary-600
-                                    dark:hover:bg-primary-700
-                                    dark:focus:ring-primary-800
-                                    """
-                                , Attr.disabled model.isSubmittingForm
-                                , Attr.attribute "data-test" "login-button-submit"
-                                ]
-                                [ if model.isSubmittingForm then
-                                    Spinner.view
-                                        [ Attr.class "flex justify-center text-xs"
-                                        ]
+                            , Button.primary
+                                { content =
+                                    if model.isSubmittingForm then
+                                        Spinner.view
+                                            [ Attr.class "flex justify-center text-xs"
+                                            ]
 
-                                  else
-                                    Html.text "Sign in"
-                                ]
+                                    else
+                                        Html.text "Sign in"
+                                , disabled = model.isSubmittingForm
+                                , onClick = Nothing
+                                , attrs =
+                                    [ Attr.type_ "submit"
+                                    , Attr.attribute "data-test" "login-button-submit"
+                                    ]
+                                }
                             ]
                         ]
                     ]

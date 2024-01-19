@@ -2,10 +2,10 @@ module Layouts.Sidebar exposing (Model, Msg, Props, layout)
 
 import Api.SignOut
 import Auth
+import Components.Button as Button
 import Effect exposing (Effect)
 import Html exposing (Html)
 import Html.Attributes as Attr
-import Html.Events as Events
 import Html.Extra as Html
 import Http exposing (Error(..))
 import Layout exposing (Layout)
@@ -189,26 +189,12 @@ viewSignOutButton user =
                         Html.div [] [ Html.text <| "Welcome, " ++ name ++ "! 👋🏻" ]
                     )
             , Html.div [] [ Html.text user.email ]
-            , Html.button
-                [ Attr.class """
-                    w-full
-                    text-white
-                    bg-primary-600
-                    font-medium
-                    rounded-lg
-                    text-sm
-                    px-5
-                    py-2.5
-                    text-center
-                    focus:ring-4
-                    focus:outline-none
-                    focus:ring-primary-300
-                    hover:bg-primary-700
-                    disabled:opacity-50
-                    """
-                , Events.onClick UserClickedSignOut
-                ]
-                [ Html.text "Sign out" ]
+            , Button.primary
+                { disabled = False
+                , onClick = Just UserClickedSignOut
+                , content = Html.text "Sign out"
+                , attrs = [ Attr.attribute "data-test" "signout-button" ]
+                }
             ]
         ]
 

@@ -1,4 +1,4 @@
-module Shared.Model exposing (AppUser(..), Model, Tokens, User)
+module Shared.Model exposing (..)
 
 {-| Normally, this value would live in "Shared.elm"
 but that would lead to a circular dependency import cycle.
@@ -32,4 +32,17 @@ type alias User =
     , name : Maybe String
     , role : String
     , email : String
+    }
+
+
+type alias Volunteers =
+    List Volunteer
+
+
+type alias Volunteer =
+    { id : Int
+    , name : String
+    , lastName : String
+    , builderAssistantId : String
+    , isActive : Bool
     }

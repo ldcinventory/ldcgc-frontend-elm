@@ -27,6 +27,7 @@ import Json.Encode as Encode
 import Json.Encode.Extra as Encode
 import Route
 import Route.Path
+import Shared.Json exposing (encodeUser)
 import Shared.Model
 import Shared.Msg
 import Task
@@ -58,23 +59,7 @@ saveUser : Shared.Model.User -> Effect msg
 saveUser user =
     SendToLocalStorage
         { key = "user"
-        , value =
-            Encode.object
-                [ ( "signatureToken", Encode.string user.tokens.signatureToken )
-                , ( "headerPayloadToken", Encode.string user.tokens.headerPayloadToken )
-                , ( "id", Encode.int user.id )
-                , ( "role", Encode.string user.role )
-                , ( "email", Encode.string user.email )
-                , ( "volunteer"
-                  , Encode.maybe
-                        (\name ->
-                            Encode.object
-                                [ ( "name", Encode.string name )
-                                ]
-                        )
-                        user.name
-                  )
-                ]
+        , value = encodeUser user
         }
 
 

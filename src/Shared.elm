@@ -18,6 +18,7 @@ import Json.Decode
 import Json.Decode.Extra as Decode
 import Route exposing (Route)
 import Route.Path
+import Shared.Json exposing (decodeUser)
 import Shared.Model
 import Shared.Msg
 
@@ -35,25 +36,8 @@ type alias Flags =
 decoder : Json.Decode.Decoder Flags
 decoder =
     Json.Decode.succeed Flags
-        |> Decode.andMap (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
+        |> Decode.andMap (Json.Decode.field "user" (Json.Decode.maybe decodeUser))
         |> Decode.andMap (Json.Decode.field "apiUrl" Json.Decode.string)
-
-
-tokensDecoder : Json.Decode.Decoder Shared.Model.Tokens
-tokensDecoder =
-    Json.Decode.succeed Shared.Model.Tokens
-        |> Decode.andMap (Json.Decode.field "signatureToken" Json.Decode.string)
-        |> Decode.andMap (Json.Decode.field "headerPayloadToken" Json.Decode.string)
-
-
-userDecoder : Json.Decode.Decoder Shared.Model.User
-userDecoder =
-    Json.Decode.succeed Shared.Model.User
-        |> Decode.andMap tokensDecoder
-        |> Decode.andMap (Json.Decode.field "id" Json.Decode.int)
-        |> Decode.andMap (Decode.optionalField "volunteer" (Json.Decode.field "name" Json.Decode.string))
-        |> Decode.andMap (Json.Decode.field "role" Json.Decode.string)
-        |> Decode.andMap (Json.Decode.field "email" Json.Decode.string)
 
 
 

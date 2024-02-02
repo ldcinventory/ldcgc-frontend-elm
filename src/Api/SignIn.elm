@@ -7,6 +7,7 @@ import Json.Decode as Decode
 import Json.Decode.Extra as Decode
 import Json.Encode as Encode
 import Maybe.Extra as Maybe
+import Shared.Json exposing (decodeRole)
 import Shared.Model
 import Url.Builder as Url
 
@@ -86,7 +87,7 @@ eulaDecoder =
 type alias User =
     { id : Int
     , name : Maybe String
-    , role : String
+    , role : Shared.Model.Role
     , email : String
     }
 
@@ -102,7 +103,7 @@ userDecoder =
         (Decode.succeed User
             |> Decode.andMap (Decode.field "id" Decode.int)
             |> Decode.andMap (Decode.optionalField "volunteer" (Decode.field "name" Decode.string))
-            |> Decode.andMap (Decode.field "role" Decode.string)
+            |> Decode.andMap (Decode.field "role" decodeRole)
             |> Decode.andMap (Decode.field "email" Decode.string)
         )
 

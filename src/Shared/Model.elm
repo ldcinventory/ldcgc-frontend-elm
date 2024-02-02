@@ -26,11 +26,17 @@ type alias Tokens =
     }
 
 
+type Role
+    = Admin
+    | UserRole
+    | Manager
+
+
 type alias User =
     { tokens : Tokens
     , id : Int
     , name : Maybe String
-    , role : String
+    , role : Role
     , email : String
     }
 

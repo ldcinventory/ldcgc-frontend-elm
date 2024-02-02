@@ -85,12 +85,12 @@ update user shared msg model =
             )
 
         PageChanged pageIndex ->
-            ( { model | pageIndex = pageIndex, volunteers = Loading }
+            ( { model | pageIndex = pageIndex }
             , Api.Volunteers.get
                 { onResponse = VolunteersApiResponded
                 , tokens = user.tokens
                 , apiUrl = shared.apiUrl
-                , pageIndex = model.pageIndex
+                , pageIndex = pageIndex
                 }
             )
 

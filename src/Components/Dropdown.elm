@@ -9,7 +9,7 @@ import Svg.Attributes as SvgAttr
 view : Html msg
 view =
     Html.div
-        [ Attr.class "lex items-center justify-end"
+        [ Attr.class "flex items-center justify-end"
         ]
         [ button
             -- TODO: turn these into actual dropdowns...

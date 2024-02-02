@@ -185,6 +185,8 @@ view user model =
                                             , Attr.class "sr-only"
                                             ]
                                             [ text "Search" ]
+
+                                        -- Implement name builderId search with debouncing!
                                         , div
                                             [ Attr.class "relative w-full"
                                             ]
@@ -399,6 +401,7 @@ view user model =
                                     ]
                                 ]
                             , nav
+                                -- TODO: extract pagination and use something like https://package.elm-lang.org/packages/jschomay/elm-paginate/latest/Paginate
                                 [ Attr.class "flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
                                 , Attr.attribute "aria-label" "Table navigation"
                                 ]

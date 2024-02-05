@@ -50,6 +50,7 @@ type alias Model =
     { volunteers : WebData Volunteers
     , pageIndex : Int
     , filterString : String
+    , openMenuOption : Maybe Int
     }
 
 
@@ -58,6 +59,7 @@ init user shared () =
     ( { volunteers = Loading
       , pageIndex = 0
       , filterString = ""
+      , openMenuOption = Nothing
       }
     , Api.Volunteers.get
         { onResponse = VolunteersApiResponded
@@ -78,6 +80,8 @@ type Msg
     | PageChanged Int
     | FilterStringChanged String
     | DelayedFilterStringChanged String
+      -- TODO: click outside should close all menu options...
+    | MenuOptionToggle Int
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -124,6 +128,18 @@ update user shared msg model =
             else
                 ( model, Effect.none )
 
+        MenuOptionToggle id ->
+            ( { model
+                | openMenuOption =
+                    if Just id == model.openMenuOption then
+                        Nothing
+
+                    else
+                        Just id
+              }
+            , Effect.none
+            )
+
 
 
 -- SUBSCRIPTIONS
@@ -144,8 +160,8 @@ delayMsg msg =
 -- VIEW
 
 
-viewVolunteer : Auth.User -> Volunteer -> Html Msg
-viewVolunteer user volunteer =
+viewVolunteer : Model -> Auth.User -> Volunteer -> Html Msg
+viewVolunteer model user volunteer =
     let
         isAdmin =
             user.role == Admin
@@ -173,7 +189,11 @@ viewVolunteer user volunteer =
         , td
             [ Attr.class "px-4 py-3"
             ]
-            [ Html.viewIf isAdmin Dropdown.view
+            [ Html.viewIf isAdmin <|
+                Dropdown.view
+                    { open = model.openMenuOption == Just volunteer.id
+                    , toggle = MenuOptionToggle volunteer.id
+                    }
             ]
         ]
 
@@ -434,7 +454,7 @@ view user model =
                                             ]
                                         ]
                                     , tbody [] <|
-                                        List.map (viewVolunteer user) volunteers
+                                        List.map (viewVolunteer model user) volunteers
                                     ]
                                 ]
                             , nav

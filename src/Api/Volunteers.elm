@@ -29,6 +29,7 @@ get :
     , tokens : Shared.Model.Tokens
     , apiUrl : String
     , pageIndex : Int
+    , filterString : String
     }
     -> Effect msg
 get options =
@@ -41,6 +42,7 @@ get options =
                     Url.relative [ options.apiUrl, "volunteers" ]
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
+                        , Url.string "filterString" options.filterString
                         ]
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken

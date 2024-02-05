@@ -12,12 +12,14 @@ import Html.Extra as Html
 import Http
 import Layouts
 import Page exposing (Page)
+import Process
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Shared
 import Shared.Model exposing (Role(..), Volunteer, Volunteers)
 import Svg exposing (path, svg)
 import Svg.Attributes as SvgAttr
+import Task
 import View exposing (View)
 
 
@@ -47,17 +49,22 @@ toLayout user _ =
 type alias Model =
     { volunteers : WebData Volunteers
     , pageIndex : Int
+    , filterString : String
     }
 
 
 init : Auth.User -> Shared.Model -> () -> ( Model, Effect Msg )
 init user shared () =
-    ( { volunteers = Loading, pageIndex = 0 }
+    ( { volunteers = Loading
+      , pageIndex = 0
+      , filterString = ""
+      }
     , Api.Volunteers.get
         { onResponse = VolunteersApiResponded
         , tokens = user.tokens
         , apiUrl = shared.apiUrl
         , pageIndex = 0
+        , filterString = ""
         }
     )
 
@@ -69,6 +76,8 @@ init user shared () =
 type Msg
     = VolunteersApiResponded (Result Http.Error Volunteers)
     | PageChanged Int
+    | FilterStringChanged String
+    | DelayedFilterStringChanged String
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -91,8 +100,29 @@ update user shared msg model =
                 , tokens = user.tokens
                 , apiUrl = shared.apiUrl
                 , pageIndex = pageIndex
+                , filterString = model.filterString
                 }
             )
+
+        FilterStringChanged filterString ->
+            ( { model | filterString = filterString }
+            , delayMsg <| DelayedFilterStringChanged filterString
+            )
+
+        DelayedFilterStringChanged filterString ->
+            if filterString == model.filterString then
+                ( model
+                , Api.Volunteers.get
+                    { onResponse = VolunteersApiResponded
+                    , tokens = user.tokens
+                    , apiUrl = shared.apiUrl
+                    , pageIndex = model.pageIndex
+                    , filterString = filterString
+                    }
+                )
+
+            else
+                ( model, Effect.none )
 
 
 
@@ -102,6 +132,12 @@ update user shared msg model =
 subscriptions : Model -> Sub Msg
 subscriptions =
     always Sub.none
+
+
+delayMsg : msg -> Effect msg
+delayMsg msg =
+    Task.perform (always msg) (Process.sleep 500)
+        |> Effect.sendCmd
 
 
 
@@ -157,6 +193,7 @@ view user model =
 
             Failure httpError ->
                 -- FIXME: do something with volunteer errors!
+                -- TODO: add Notification component and show errors there...
                 [ Html.text "Something went wrong..."
                 ]
 
@@ -212,7 +249,7 @@ view user model =
                                                 , Attr.id "simple-search"
                                                 , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                                 , Attr.placeholder "Search"
-                                                , Attr.required True
+                                                , Events.onInput FilterStringChanged
                                                 ]
                                                 []
                                             ]

@@ -4,6 +4,7 @@ import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
 import Json.Decode.Extra as Decode
+import Regex exposing (Regex)
 import Shared.Model exposing (Volunteer, Volunteers)
 import Url.Builder as Url
 
@@ -11,7 +12,12 @@ import Url.Builder as Url
 decoder : Decode.Decoder Volunteers
 decoder =
     Decode.field "data" <|
-        Decode.list volunteerDecoder
+        Decode.oneOf
+            [ Decode.list volunteerDecoder
+
+            -- When searching by builder assistand id, only one volunteer is returned!
+            , Decode.map List.singleton volunteerDecoder
+            ]
 
 
 messageDecoder : Decode.Decoder String
@@ -56,6 +62,11 @@ get :
     -> Effect msg
 get options =
     let
+        builderAssistantIdRegex : Regex
+        builderAssistantIdRegex =
+            Maybe.withDefault Regex.never <|
+                Regex.fromString "^\\d{7}$"
+
         cmd : Cmd msg
         cmd =
             Http.request
@@ -64,7 +75,11 @@ get options =
                     Url.relative [ options.apiUrl, "volunteers" ]
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
-                        , Url.string "filterString" options.filterString
+                        , if Regex.contains builderAssistantIdRegex options.filterString then
+                            Url.string "builderAssistantId" options.filterString
+
+                          else
+                            Url.string "filterString" options.filterString
                         ]
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken

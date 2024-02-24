@@ -19,8 +19,6 @@ import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Shared
 import Shared.Model exposing (Role(..), Volunteer, Volunteers)
-import Svg exposing (path, svg)
-import Svg.Attributes as SvgAttr
 import Task
 import View exposing (View)
 
@@ -138,7 +136,7 @@ update user shared msg model =
             )
 
         DeleteVolunteerResponse (Ok response) ->
-            -- TODO: show notification everything went fine!
+            -- TODO: show notification (toast) everything went fine!
             ( model
               -- Refresh the list to see the changes
             , Api.Volunteers.get
@@ -310,6 +308,8 @@ view user model =
             Failure httpError ->
                 -- FIXME: do something with volunteer errors!
                 -- TODO: add Notification component and show errors there...
+                -- TODO: implement Flowbite Toast https://flowbite.com/docs/components/toast/
+                -- TODO: implement builderId search! (filtering with regex?)
                 [ Html.text "Something went wrong..."
                 ]
 
@@ -339,33 +339,19 @@ view user model =
                                             , Attr.class "sr-only"
                                             ]
                                             [ text "Search" ]
-
-                                        -- Implement name builderId search with debouncing!
                                         , div
                                             [ Attr.class "relative w-full"
                                             ]
                                             [ div
                                                 [ Attr.class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                                                 ]
-                                                [ svg
-                                                    [ Attr.attribute "aria-hidden" "true"
-                                                    , SvgAttr.class "w-5 h-5 text-gray-500 dark:text-gray-400"
-                                                    , SvgAttr.fill "currentColor"
-                                                    , SvgAttr.viewBox "0 0 20 20"
-                                                    ]
-                                                    [ path
-                                                        [ SvgAttr.fillRule "evenodd"
-                                                        , SvgAttr.d "M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                                        , SvgAttr.clipRule "evenodd"
-                                                        ]
-                                                        []
-                                                    ]
+                                                [ Icons.search
                                                 ]
                                             , input
                                                 [ Attr.type_ "text"
                                                 , Attr.id "simple-search"
                                                 , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                                , Attr.placeholder "Search"
+                                                , Attr.placeholder "Search by name, last name or builder assistant id"
                                                 , Events.onInput FilterStringChanged
                                                 ]
                                                 []
@@ -384,33 +370,9 @@ view user model =
                                             , Attr.class "w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
                                             , Attr.type_ "button"
                                             ]
-                                            [ svg
-                                                [ Attr.attribute "aria-hidden" "true"
-                                                , SvgAttr.class "h-4 w-4 mr-2 text-gray-400"
-                                                , SvgAttr.viewBox "0 0 20 20"
-                                                , SvgAttr.fill "currentColor"
-                                                ]
-                                                [ path
-                                                    [ SvgAttr.fillRule "evenodd"
-                                                    , SvgAttr.d "M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
-                                                    , SvgAttr.clipRule "evenodd"
-                                                    ]
-                                                    []
-                                                ]
+                                            [ Icons.filter
                                             , text "Filter"
-                                            , svg
-                                                [ SvgAttr.class "-mr-1 ml-1.5 w-5 h-5"
-                                                , SvgAttr.fill "currentColor"
-                                                , SvgAttr.viewBox "0 0 20 20"
-                                                , Attr.attribute "aria-hidden" "true"
-                                                ]
-                                                [ path
-                                                    [ SvgAttr.clipRule "evenodd"
-                                                    , SvgAttr.fillRule "evenodd"
-                                                    , SvgAttr.d "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                    ]
-                                                    []
-                                                ]
+                                            , Icons.chevronDown
                                             ]
                                         , div
                                             [ Attr.id "filterDropdown"
@@ -585,19 +547,7 @@ view user model =
                                                 [ Attr.class "sr-only"
                                                 ]
                                                 [ text "Previous" ]
-                                            , svg
-                                                [ SvgAttr.class "w-5 h-5"
-                                                , Attr.attribute "aria-hidden" "true"
-                                                , SvgAttr.fill "currentColor"
-                                                , SvgAttr.viewBox "0 0 20 20"
-                                                ]
-                                                [ path
-                                                    [ SvgAttr.fillRule "evenodd"
-                                                    , SvgAttr.d "M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                                    , SvgAttr.clipRule "evenodd"
-                                                    ]
-                                                    []
-                                                ]
+                                            , Icons.chevronLeft
                                             ]
                                         ]
                                     , li []
@@ -645,19 +595,7 @@ view user model =
                                                 [ Attr.class "sr-only"
                                                 ]
                                                 [ text "Next" ]
-                                            , svg
-                                                [ SvgAttr.class "w-5 h-5"
-                                                , Attr.attribute "aria-hidden" "true"
-                                                , SvgAttr.fill "currentColor"
-                                                , SvgAttr.viewBox "0 0 20 20"
-                                                ]
-                                                [ path
-                                                    [ SvgAttr.fillRule "evenodd"
-                                                    , SvgAttr.d "M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                                    , SvgAttr.clipRule "evenodd"
-                                                    ]
-                                                    []
-                                                ]
+                                            , Icons.chevronRight
                                             ]
                                         ]
                                     ]

@@ -122,3 +122,88 @@ close =
             ]
             []
         ]
+
+
+search : Svg msg
+search =
+    svg
+        [ Attr.attribute "aria-hidden" "true"
+        , SvgAttr.class "w-5 h-5 text-gray-500 dark:text-gray-400"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 20 20"
+        ]
+        [ path
+            [ SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+            , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]
+
+
+chevronLeft : Svg msg
+chevronLeft =
+    svg
+        [ SvgAttr.class "w-5 h-5"
+        , Attr.attribute "aria-hidden" "true"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 20 20"
+        ]
+        [ path
+            [ SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+            , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]
+
+
+chevronRight : Svg msg
+chevronRight =
+    svg
+        [ SvgAttr.class "w-5 h-5"
+        , Attr.attribute "aria-hidden" "true"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 20 20"
+        ]
+        [ path
+            [ SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+            , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]
+
+
+filter : Svg msg
+filter =
+    svg
+        [ Attr.attribute "aria-hidden" "true"
+        , SvgAttr.class "h-4 w-4 mr-2 text-gray-400"
+        , SvgAttr.viewBox "0 0 20 20"
+        , SvgAttr.fill "currentColor"
+        ]
+        [ path
+            [ SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+            , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]
+
+
+chevronDown : Svg msg
+chevronDown =
+    svg
+        [ SvgAttr.class "-mr-1 ml-1.5 w-5 h-5"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 20 20"
+        , Attr.attribute "aria-hidden" "true"
+        ]
+        [ path
+            [ SvgAttr.clipRule "evenodd"
+            , SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            ]
+            []
+        ]

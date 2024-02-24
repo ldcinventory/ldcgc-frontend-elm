@@ -135,8 +135,8 @@ update user shared msg model =
                 }
             )
 
-        DeleteVolunteerResponse (Ok response) ->
-            -- TODO: show notification (toast) everything went fine!
+        DeleteVolunteerResponse (Ok _) ->
+            -- FIXME: show notification (toast) everything went fine!
             ( model
               -- Refresh the list to see the changes
             , Api.Volunteers.get
@@ -272,7 +272,10 @@ viewDeleteModal volunteer =
                 , Html.p
                     [ Attr.class "mb-4 text-gray-500 dark:text-gray-300"
                     ]
-                    [ text "Are you sure you want to delete this volunteer?" ]
+                    [ text "Are you sure you want to delete the volunteer "
+                    , Html.strong [] [ text <| volunteer.name ++ " " ++ volunteer.lastName ]
+                    , text "?"
+                    ]
                 , div
                     [ Attr.class "flex justify-center items-center space-x-4"
                     ]
@@ -305,8 +308,7 @@ view user model =
                 [ Spinner.view [ Attr.class "h-full w-full" ]
                 ]
 
-            Failure httpError ->
-                -- FIXME: do something with volunteer errors!
+            Failure _ ->
                 -- TODO: add Notification component and show errors there...
                 -- TODO: implement Flowbite Toast https://flowbite.com/docs/components/toast/
                 -- TODO: implement builderId search! (filtering with regex?)

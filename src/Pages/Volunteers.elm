@@ -2,7 +2,9 @@ module Pages.Volunteers exposing (Model, Msg, page)
 
 import Api.Volunteers
 import Auth
+import Components.Button as Button
 import Components.Dropdown as Dropdown
+import Components.Icons as Icons
 import Components.Spinner as Spinner
 import Effect exposing (Effect)
 import Html exposing (Html, a, button, div, form, h6, input, label, li, nav, section, span, table, tbody, td, text, th, thead, tr, ul)
@@ -51,6 +53,7 @@ type alias Model =
     , pageIndex : Int
     , filterString : String
     , openMenuOption : Maybe Int
+    , deleteVolunteerModal : Maybe Volunteer
     }
 
 
@@ -60,6 +63,7 @@ init user shared () =
       , pageIndex = 0
       , filterString = ""
       , openMenuOption = Nothing
+      , deleteVolunteerModal = Nothing
       }
     , Api.Volunteers.get
         { onResponse = VolunteersApiResponded
@@ -82,6 +86,7 @@ type Msg
       -- | TODO: OnClickOutside https://dev.to/margaretkrutikova/elm-dom-node-decoder-to-detect-click-outside-3ioh
     | MenuOptionToggle Int
     | DeleteVolunteer String
+    | RequestDeleteVolunteer (Maybe Volunteer)
     | DeleteVolunteerResponse (Result Http.Error String)
     | VolunteersApiResponded (Result Http.Error Volunteers)
 
@@ -114,9 +119,16 @@ update user shared msg model =
                 }
             )
 
+        RequestDeleteVolunteer volunteer ->
+            ( { model
+                | deleteVolunteerModal = volunteer
+                , openMenuOption = Nothing
+              }
+            , Effect.none
+            )
+
         DeleteVolunteer builderAssistantId ->
-            -- TODO: make confirmation modal appear
-            ( model
+            ( { model | deleteVolunteerModal = Nothing }
             , Api.Volunteers.delete
                 { onResponse = DeleteVolunteerResponse
                 , tokens = user.tokens
@@ -226,8 +238,58 @@ viewVolunteer model user volunteer =
                 Dropdown.view
                     { open = model.openMenuOption == Just volunteer.id
                     , toggle = MenuOptionToggle volunteer.id
-                    , onDelete = DeleteVolunteer volunteer.builderAssistantId
+                    , onDelete = RequestDeleteVolunteer <| Just volunteer
                     }
+            ]
+        ]
+
+
+viewDeleteModal : Volunteer -> Html Msg
+viewDeleteModal volunteer =
+    div
+        [ Attr.id "deleteModal"
+        , Attr.tabindex -1
+        , Attr.class "flex overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
+        ]
+        [ div
+            [ Attr.class "relative p-4 w-full max-w-md h-full md:h-auto"
+            ]
+            [ {- Modal content -}
+              Html.div
+                [ Attr.class "relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5"
+                ]
+                [ Html.button
+                    [ Attr.type_ "button"
+                    , Attr.class "text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                    , Attr.attribute "data-modal-toggle" "deleteModal"
+                    , Events.onClick <| RequestDeleteVolunteer Nothing
+                    ]
+                    [ Icons.trash
+                    , span
+                        [ Attr.class "sr-only"
+                        ]
+                        [ text "Close modal" ]
+                    ]
+                , Icons.close
+                , Html.p
+                    [ Attr.class "mb-4 text-gray-500 dark:text-gray-300"
+                    ]
+                    [ text "Are you sure you want to delete this volunteer?" ]
+                , div
+                    [ Attr.class "flex justify-center items-center space-x-4"
+                    ]
+                    [ Button.secondary
+                        { onClick = RequestDeleteVolunteer Nothing
+                        , content = "No, cancel"
+                        , attrs = [ Attr.attribute "data-modal-toggle" "deleteModal" ]
+                        }
+                    , Button.danger
+                        { onClick = DeleteVolunteer volunteer.builderAssistantId
+                        , content = "Yes, I'm sure"
+                        , attrs = [ Attr.type_ "submit" ]
+                        }
+                    ]
+                ]
             ]
         ]
 
@@ -255,7 +317,8 @@ view user model =
                 [ section
                     [ Attr.class "bg-gray-50 dark:bg-gray-900 p-3 sm:p-5"
                     ]
-                    [ div
+                    [ Html.viewMaybe viewDeleteModal model.deleteVolunteerModal
+                    , div
                         [ Attr.class "mx-auto max-w-screen-xl px-4 lg:px-12"
                         ]
                         [ {- Start coding here -}

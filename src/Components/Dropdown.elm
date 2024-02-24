@@ -10,9 +10,10 @@ import Svg.Attributes as SvgAttr
 view :
     { open : Bool
     , toggle : msg
+    , onDelete : msg -- FIXME: temporary, this is supper crappy...
     }
     -> Html msg
-view { open, toggle } =
+view { open, toggle, onDelete } =
     Html.div
         [ Attr.class "flex items-center justify-end"
         ]
@@ -49,7 +50,7 @@ view { open, toggle } =
             , Attr.class "absolute z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
 
             -- FIXME: style="position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate3d(1008px, 156px, 0px);"
-            -- Check Flowbite,js to see how they calculate the translated3d for menu options...
+            -- Check Flowbite.js to see how they calculate the translated3d for menu options...
             ]
             [ ul
                 [ Attr.class "py-1 text-sm text-gray-700 dark:text-gray-200"
@@ -75,6 +76,7 @@ view { open, toggle } =
                 ]
                 [ a
                     [ Attr.href "#"
+                    , Events.onClick onDelete
                     , Attr.class "block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                     ]
                     [ text "Delete" ]

@@ -31,6 +31,6 @@ about deploying your app for free using Netlify or Vercel.
 - [ ] Extract Components/Modal and re-use it!
 - [x] Extract Components/Button and re-use it!
 - [ ] Implement password recovery workflow
-- [ ] Implement responsive sidebar menu
+- [x] Implement responsive sidebar menu
 - [x] Implement volunteers page
 - [ ] Implement tools page

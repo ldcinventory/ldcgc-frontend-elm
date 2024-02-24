@@ -76,12 +76,14 @@ init user shared () =
 
 
 type Msg
-    = VolunteersApiResponded (Result Http.Error Volunteers)
-    | PageChanged Int
+    = PageChanged Int
     | FilterStringChanged String
     | DelayedFilterStringChanged String
-      -- TODO: click outside should close all menu options...
+      -- | TODO: OnClickOutside https://dev.to/margaretkrutikova/elm-dom-node-decoder-to-detect-click-outside-3ioh
     | MenuOptionToggle Int
+    | DeleteVolunteer String
+    | DeleteVolunteerResponse (Result Http.Error String)
+    | VolunteersApiResponded (Result Http.Error Volunteers)
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -97,6 +99,10 @@ update user shared msg model =
             , Effect.none
             )
 
+        -- TODO: OnClickOutside ->
+        --     ( { model | openMenuOption = Nothing }
+        --     , Effect.none
+        --     )
         PageChanged pageIndex ->
             ( { model | pageIndex = pageIndex }
             , Api.Volunteers.get
@@ -107,6 +113,33 @@ update user shared msg model =
                 , filterString = model.filterString
                 }
             )
+
+        DeleteVolunteer builderAssistantId ->
+            -- TODO: make confirmation modal appear
+            ( model
+            , Api.Volunteers.delete
+                { onResponse = DeleteVolunteerResponse
+                , tokens = user.tokens
+                , apiUrl = shared.apiUrl
+                , builderAssistantId = builderAssistantId
+                }
+            )
+
+        DeleteVolunteerResponse (Ok response) ->
+            -- TODO: show notification everything went fine!
+            ( model
+              -- Refresh the list to see the changes
+            , Api.Volunteers.get
+                { onResponse = VolunteersApiResponded
+                , tokens = user.tokens
+                , apiUrl = shared.apiUrl
+                , pageIndex = model.pageIndex
+                , filterString = model.filterString
+                }
+            )
+
+        DeleteVolunteerResponse (Err httpError) ->
+            ( { model | volunteers = Failure httpError }, Effect.none )
 
         FilterStringChanged filterString ->
             ( { model | filterString = filterString }
@@ -193,6 +226,7 @@ viewVolunteer model user volunteer =
                 Dropdown.view
                     { open = model.openMenuOption == Just volunteer.id
                     , toggle = MenuOptionToggle volunteer.id
+                    , onDelete = DeleteVolunteer volunteer.builderAssistantId
                     }
             ]
         ]

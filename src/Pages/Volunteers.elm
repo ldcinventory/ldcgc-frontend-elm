@@ -2,6 +2,7 @@ module Pages.Volunteers exposing (Model, Msg, page)
 
 import Api.Volunteers
 import Auth
+import Browser.Events
 import Components.Button as Button
 import Components.Dropdown as Dropdown
 import Components.Icons as Icon
@@ -84,11 +85,11 @@ init user shared () =
 
 type Msg
     = PageChanged Int
+    | OnClickOutside
     | ToastMsg Toast.Msg
     | AddToast String To.ToastType
     | FilterStringChanged String
     | DelayedFilterStringChanged String
-      -- | TODO: OnClickOutside https://dev.to/margaretkrutikova/elm-dom-node-decoder-to-detect-click-outside-3ioh
     | MenuOptionToggle Int
     | DeleteVolunteer Volunteer
     | RequestDeleteVolunteer (Maybe Volunteer)
@@ -128,10 +129,11 @@ update user shared msg model =
             , Effect.none
             )
 
-        -- TODO: OnClickOutside ->
-        --     ( { model | openMenuOption = Nothing }
-        --     , Effect.none
-        --     )
+        OnClickOutside ->
+            ( { model | openMenuOption = Nothing }
+            , Effect.none
+            )
+
         PageChanged pageIndex ->
             ( { model | pageIndex = pageIndex }
             , Api.Volunteers.get
@@ -211,8 +213,12 @@ update user shared msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions =
-    always Sub.none
+subscriptions { openMenuOption } =
+    if openMenuOption == Nothing then
+        Sub.none
+
+    else
+        Browser.Events.onMouseDown (Dropdown.outsideTarget OnClickOutside "volunteer-dropdown")
 
 
 delayMsg : msg -> Effect msg
@@ -259,6 +265,7 @@ viewVolunteer model user volunteer =
                     { open = model.openMenuOption == Just volunteer.id
                     , toggle = MenuOptionToggle volunteer.id
                     , onDelete = RequestDeleteVolunteer <| Just volunteer
+                    , dropdownId = "volunteer-dropdown"
                     }
             ]
         ]

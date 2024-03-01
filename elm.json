@@ -18,7 +18,8 @@
             "elm/url": "1.0.0",
             "elm-community/html-extra": "3.4.0",
             "elm-community/json-extra": "4.3.0",
-            "elm-community/maybe-extra": "5.3.0",
+            "elmcraft/core-extra": "2.0.0",
+            "emilianobovetti/elm-toast": "1.1.0",
             "krisajenkins/remotedata": "6.0.1",
             "simonh1000/elm-jwt": "7.1.1"
         },

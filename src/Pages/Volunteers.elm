@@ -4,15 +4,17 @@ import Api.Volunteers
 import Auth
 import Components.Button as Button
 import Components.Dropdown as Dropdown
-import Components.Icons as Icons
+import Components.Icons as Icon
 import Components.Spinner as Spinner
+import Components.Toast as To
 import Effect exposing (Effect)
-import Html exposing (Html, a, button, div, form, h6, input, label, li, nav, section, span, table, tbody, td, text, th, thead, tr, ul)
+import Html exposing (Html)
 import Html.Attributes as Attr
 import Html.Events as Events
 import Html.Extra as Html
 import Http
 import Layouts
+import List.Extra as List
 import Page exposing (Page)
 import Process
 import RemoteData exposing (RemoteData(..), WebData)
@@ -20,6 +22,7 @@ import Route exposing (Route)
 import Shared
 import Shared.Model exposing (Role(..), Volunteer, Volunteers)
 import Task
+import Toast
 import View exposing (View)
 
 
@@ -52,6 +55,7 @@ type alias Model =
     , filterString : String
     , openMenuOption : Maybe Int
     , deleteVolunteerModal : Maybe Volunteer
+    , tray : Toast.Tray To.Toast
     }
 
 
@@ -62,6 +66,7 @@ init user shared () =
       , filterString = ""
       , openMenuOption = Nothing
       , deleteVolunteerModal = Nothing
+      , tray = Toast.tray
       }
     , Api.Volunteers.get
         { onResponse = VolunteersApiResponded
@@ -79,22 +84,43 @@ init user shared () =
 
 type Msg
     = PageChanged Int
+    | ToastMsg Toast.Msg
+    | AddToast String To.ToastType
     | FilterStringChanged String
     | DelayedFilterStringChanged String
       -- | TODO: OnClickOutside https://dev.to/margaretkrutikova/elm-dom-node-decoder-to-detect-click-outside-3ioh
     | MenuOptionToggle Int
-    | DeleteVolunteer String
+    | DeleteVolunteer Volunteer
     | RequestDeleteVolunteer (Maybe Volunteer)
-    | DeleteVolunteerResponse (Result Http.Error String)
+    | DeleteVolunteerResponse Volunteer (Result Http.Error String)
     | VolunteersApiResponded (Result Http.Error Volunteers)
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update user shared msg model =
     case msg of
+        ToastMsg toastMsg ->
+            let
+                ( newTray, newTmesg ) =
+                    Toast.update toastMsg model.tray
+            in
+            ( { model | tray = newTray }
+            , Effect.sendCmd <| Cmd.map ToastMsg newTmesg
+            )
+
+        AddToast message type_ ->
+            let
+                ( newTray, tmesg ) =
+                    Toast.add model.tray <|
+                        Toast.expireIn 5000 { message = message, toastType = type_ }
+            in
+            ( { model | tray = newTray }
+            , Effect.sendCmd <| Cmd.map ToastMsg tmesg
+            )
+
         VolunteersApiResponded (Err httpError) ->
             ( { model | volunteers = Failure httpError }
-            , Effect.none
+            , Effect.sendMsg <| AddToast "The volunteers API responded with an error." To.Danger
             )
 
         VolunteersApiResponded (Ok volunteers) ->
@@ -125,31 +151,27 @@ update user shared msg model =
             , Effect.none
             )
 
-        DeleteVolunteer builderAssistantId ->
+        DeleteVolunteer volunteer ->
             ( { model | deleteVolunteerModal = Nothing }
             , Api.Volunteers.delete
-                { onResponse = DeleteVolunteerResponse
+                { onResponse = DeleteVolunteerResponse volunteer
                 , tokens = user.tokens
                 , apiUrl = shared.apiUrl
-                , builderAssistantId = builderAssistantId
+                , builderAssistantId = volunteer.builderAssistantId
                 }
             )
 
-        DeleteVolunteerResponse (Ok _) ->
-            -- FIXME: show notification (toast) everything went fine!
+        DeleteVolunteerResponse volunteer (Ok _) ->
+            ( { model
+                | volunteers = RemoteData.map (List.remove volunteer) model.volunteers
+              }
+            , Effect.sendMsg <| AddToast "Volunteer deleted correctly." To.Success
+            )
+
+        DeleteVolunteerResponse _ (Err _) ->
             ( model
-              -- Refresh the list to see the changes
-            , Api.Volunteers.get
-                { onResponse = VolunteersApiResponded
-                , tokens = user.tokens
-                , apiUrl = shared.apiUrl
-                , pageIndex = model.pageIndex
-                , filterString = model.filterString
-                }
+            , Effect.sendMsg <| AddToast "Something wrong happened while deleting the volunteer." To.Danger
             )
-
-        DeleteVolunteerResponse (Err httpError) ->
-            ( { model | volunteers = Failure httpError }, Effect.none )
 
         FilterStringChanged filterString ->
             ( { model | filterString = filterString }
@@ -209,27 +231,27 @@ viewVolunteer model user volunteer =
         isAdmin =
             user.role == Admin
     in
-    tr
+    Html.tr
         [ Attr.class "border-b dark:border-gray-700"
         ]
-        [ td
+        [ Html.td
             [ Attr.class "px-4 py-3"
             ]
-            [ text <| String.fromInt volunteer.id ]
-        , th
+            [ Html.text <| String.fromInt volunteer.id ]
+        , Html.th
             [ Attr.scope "row"
             , Attr.class "px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
             ]
-            [ text volunteer.name ]
-        , td
+            [ Html.text volunteer.name ]
+        , Html.td
             [ Attr.class "px-4 py-3"
             ]
-            [ text volunteer.lastName ]
-        , td
+            [ Html.text volunteer.lastName ]
+        , Html.td
             [ Attr.class "px-4 py-3 font-barcode text-2xl"
             ]
-            [ text volunteer.builderAssistantId ]
-        , td
+            [ Html.text volunteer.builderAssistantId ]
+        , Html.td
             [ Attr.class "px-4 py-3"
             ]
             [ Html.viewIf isAdmin <|
@@ -244,12 +266,12 @@ viewVolunteer model user volunteer =
 
 viewDeleteModal : Volunteer -> Html Msg
 viewDeleteModal volunteer =
-    div
+    Html.div
         [ Attr.id "deleteModal"
         , Attr.tabindex -1
         , Attr.class "flex overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
         ]
-        [ div
+        [ Html.div
             [ Attr.class "relative p-4 w-full max-w-md h-full md:h-auto"
             ]
             [ {- Modal content -}
@@ -262,21 +284,21 @@ viewDeleteModal volunteer =
                     , Attr.attribute "data-modal-toggle" "deleteModal"
                     , Events.onClick <| RequestDeleteVolunteer Nothing
                     ]
-                    [ Icons.trash
-                    , span
+                    [ Icon.close
+                    , Html.span
                         [ Attr.class "sr-only"
                         ]
-                        [ text "Close modal" ]
+                        [ Html.text "Close modal" ]
                     ]
-                , Icons.close
+                , Icon.trash
                 , Html.p
                     [ Attr.class "mb-4 text-gray-500 dark:text-gray-300"
                     ]
-                    [ text "Are you sure you want to delete the volunteer "
-                    , Html.strong [] [ text <| volunteer.name ++ " " ++ volunteer.lastName ]
-                    , text "?"
+                    [ Html.text "Are you sure you want to delete the volunteer "
+                    , Html.strong [] [ Html.text <| volunteer.name ++ " " ++ volunteer.lastName ]
+                    , Html.text "?"
                     ]
-                , div
+                , Html.div
                     [ Attr.class "flex justify-center items-center space-x-4"
                     ]
                     [ Button.secondary
@@ -285,13 +307,23 @@ viewDeleteModal volunteer =
                         , attrs = [ Attr.attribute "data-modal-toggle" "deleteModal" ]
                         }
                     , Button.danger
-                        { onClick = DeleteVolunteer volunteer.builderAssistantId
+                        { onClick = DeleteVolunteer volunteer
                         , content = "Yes, I'm sure"
                         , attrs = [ Attr.type_ "submit" ]
                         }
                     ]
                 ]
             ]
+        ]
+
+
+viewNotification : Model -> Html Msg
+viewNotification model =
+    Html.div [ Attr.class "absolute z-40 p-4 sm:ml-64 h-full" ]
+        [ Toast.render
+            (To.view (ToastMsg << Toast.remove << .id))
+            model.tray
+            (Toast.config ToastMsg)
         ]
 
 
@@ -309,47 +341,43 @@ view user model =
                 ]
 
             Failure _ ->
-                -- TODO: add Notification component and show errors there...
-                -- TODO: implement Flowbite Toast https://flowbite.com/docs/components/toast/
-                -- TODO: implement builderId search! (filtering with regex?)
-                [ Html.text "Something went wrong..."
-                ]
+                [ viewNotification model ]
 
             Success volunteers ->
-                [ section
+                [ viewNotification model
+                , Html.section
                     [ Attr.class "bg-gray-50 dark:bg-gray-900 p-3 sm:p-5"
                     ]
                     [ Html.viewMaybe viewDeleteModal model.deleteVolunteerModal
-                    , div
+                    , Html.div
                         [ Attr.class "mx-auto max-w-screen-xl px-4 lg:px-12"
                         ]
-                        [ {- Start coding here -}
-                          div
+                        [ Html.div
                             [ Attr.class "bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
                             ]
-                            [ div
+                            [ Html.div
                                 [ Attr.class "flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4"
                                 ]
-                                [ div
+                                [ Html.div
                                     [ Attr.class "w-full md:w-1/2"
                                     ]
-                                    [ form
+                                    [ Html.form
                                         [ Attr.class "flex items-center"
                                         ]
-                                        [ label
+                                        [ Html.label
                                             [ Attr.for "simple-search"
                                             , Attr.class "sr-only"
                                             ]
-                                            [ text "Search" ]
-                                        , div
+                                            [ Html.text "Search" ]
+                                        , Html.div
                                             [ Attr.class "relative w-full"
                                             ]
-                                            [ div
+                                            [ Html.div
                                                 [ Attr.class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                                                 ]
-                                                [ Icons.search
+                                                [ Icon.search
                                                 ]
-                                            , input
+                                            , Html.input
                                                 [ Attr.type_ "text"
                                                 , Attr.id "simple-search"
                                                 , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -360,244 +388,132 @@ view user model =
                                             ]
                                         ]
                                     ]
-                                , div
-                                    [ Attr.class "w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0"
-                                    ]
-                                    [ div
-                                        [ Attr.class "flex items-center space-x-3 w-full md:w-auto"
-                                        ]
-                                        [ button
-                                            [ Attr.id "filterDropdownButton"
-                                            , Attr.attribute "data-dropdown-toggle" "filterDropdown"
-                                            , Attr.class "w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                                            , Attr.type_ "button"
-                                            ]
-                                            [ Icons.filter
-                                            , text "Filter"
-                                            , Icons.chevronDown
-                                            ]
-                                        , div
-                                            [ Attr.id "filterDropdown"
-                                            , Attr.class "z-10 hidden w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700"
-                                            ]
-                                            [ h6
-                                                [ Attr.class "mb-3 text-sm font-medium text-gray-900 dark:text-white"
-                                                ]
-                                                [ text "Choose brand" ]
-                                            , ul
-                                                [ Attr.class "space-y-2 text-sm"
-                                                , Attr.attribute "aria-labelledby" "filterDropdownButton"
-                                                ]
-                                                [ li
-                                                    [ Attr.class "flex items-center"
-                                                    ]
-                                                    [ input
-                                                        [ Attr.id "apple"
-                                                        , Attr.type_ "checkbox"
-                                                        , Attr.value ""
-                                                        , Attr.class "w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        ]
-                                                        []
-                                                    , label
-                                                        [ Attr.for "apple"
-                                                        , Attr.class "ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                        ]
-                                                        [ text "Apple (56)" ]
-                                                    ]
-                                                , li
-                                                    [ Attr.class "flex items-center"
-                                                    ]
-                                                    [ input
-                                                        [ Attr.id "fitbit"
-                                                        , Attr.type_ "checkbox"
-                                                        , Attr.value ""
-                                                        , Attr.class "w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        ]
-                                                        []
-                                                    , label
-                                                        [ Attr.for "fitbit"
-                                                        , Attr.class "ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                        ]
-                                                        [ text "Microsoft (16)" ]
-                                                    ]
-                                                , li
-                                                    [ Attr.class "flex items-center"
-                                                    ]
-                                                    [ input
-                                                        [ Attr.id "razor"
-                                                        , Attr.type_ "checkbox"
-                                                        , Attr.value ""
-                                                        , Attr.class "w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        ]
-                                                        []
-                                                    , label
-                                                        [ Attr.for "razor"
-                                                        , Attr.class "ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                        ]
-                                                        [ text "Razor (49)" ]
-                                                    ]
-                                                , li
-                                                    [ Attr.class "flex items-center"
-                                                    ]
-                                                    [ input
-                                                        [ Attr.id "nikon"
-                                                        , Attr.type_ "checkbox"
-                                                        , Attr.value ""
-                                                        , Attr.class "w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        ]
-                                                        []
-                                                    , label
-                                                        [ Attr.for "nikon"
-                                                        , Attr.class "ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                        ]
-                                                        [ text "Nikon (12)" ]
-                                                    ]
-                                                , li
-                                                    [ Attr.class "flex items-center"
-                                                    ]
-                                                    [ input
-                                                        [ Attr.id "benq"
-                                                        , Attr.type_ "checkbox"
-                                                        , Attr.value ""
-                                                        , Attr.class "w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
-                                                        ]
-                                                        []
-                                                    , label
-                                                        [ Attr.for "benq"
-                                                        , Attr.class "ml-2 text-sm font-medium text-gray-900 dark:text-gray-100"
-                                                        ]
-                                                        [ text "BenQ (74)" ]
-                                                    ]
-                                                ]
-                                            ]
-                                        ]
-                                    ]
                                 ]
-                            , div
+                            , Html.div
                                 [ Attr.class "overflow-x-auto"
                                 ]
-                                [ table
+                                [ Html.table
                                     [ Attr.class "w-full text-sm text-left text-gray-500 dark:text-gray-400"
                                     ]
-                                    [ thead
+                                    [ Html.thead
                                         [ Attr.class "text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
                                         ]
-                                        [ tr []
-                                            [ th
+                                        [ Html.tr []
+                                            [ Html.th
                                                 [ Attr.scope "col"
                                                 , Attr.class "px-4 py-3"
                                                 ]
-                                                [ text "Id" ]
-                                            , th
+                                                [ Html.text "Id" ]
+                                            , Html.th
                                                 [ Attr.scope "col"
                                                 , Attr.class "px-4 py-3"
                                                 ]
-                                                [ text "Name" ]
-                                            , th
+                                                [ Html.text "Name" ]
+                                            , Html.th
                                                 [ Attr.scope "col"
                                                 , Attr.class "px-4 py-3"
                                                 ]
-                                                [ text "Last name" ]
-                                            , th
+                                                [ Html.text "Last name" ]
+                                            , Html.th
                                                 [ Attr.scope "col"
                                                 , Attr.class "px-4 py-3"
                                                 ]
-                                                [ text "Builder Assitant Id" ]
-                                            , th
+                                                [ Html.text "Builder Assitant Id" ]
+                                            , Html.th
                                                 [ Attr.scope "col"
                                                 , Attr.class "px-4 py-3"
                                                 ]
-                                                [ span
+                                                [ Html.span
                                                     [ Attr.class "sr-only"
                                                     ]
-                                                    [ text "Actions" ]
+                                                    [ Html.text "Actions" ]
                                                 ]
                                             ]
                                         ]
-                                    , tbody [] <|
+                                    , Html.tbody [] <|
                                         List.map (viewVolunteer model user) volunteers
                                     ]
                                 ]
-                            , nav
+                            , Html.nav
                                 -- TODO: extract pagination and use something like https://package.elm-lang.org/packages/jschomay/elm-paginate/latest/Paginate
                                 [ Attr.class "flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
                                 , Attr.attribute "aria-label" "Table navigation"
                                 ]
-                                [ span
+                                [ Html.span
                                     [ Attr.class "text-sm font-normal text-gray-500 dark:text-gray-400"
                                     ]
-                                    [ text "Showing "
-                                    , span
+                                    [ Html.text "Showing "
+                                    , Html.span
                                         [ Attr.class "font-semibold text-gray-900 dark:text-white"
                                         ]
-                                        [ text "1-10" ]
-                                    , text " of "
-                                    , span
+                                        [ Html.text "1-10" ]
+                                    , Html.text " of "
+                                    , Html.span
                                         [ Attr.class "font-semibold text-gray-900 dark:text-white"
                                         ]
-                                        [ text "1000" ]
+                                        [ Html.text "1000" ]
                                     ]
-                                , ul
+                                , Html.ul
                                     [ Attr.class "inline-flex items-stretch -space-x-px"
                                     ]
-                                    [ li []
-                                        [ button
+                                    [ Html.li []
+                                        [ Html.button
                                             [ Events.onClick <| PageChanged <| model.pageIndex - 1
                                             , Attr.class "flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                             ]
-                                            [ span
+                                            [ Html.span
                                                 [ Attr.class "sr-only"
                                                 ]
-                                                [ text "Previous" ]
-                                            , Icons.chevronLeft
+                                                [ Html.text "Previous" ]
+                                            , Icon.chevronLeft
                                             ]
                                         ]
-                                    , li []
-                                        [ a
+                                    , Html.li []
+                                        [ Html.a
                                             [ Attr.href "#"
                                             , Attr.attribute "aria-current" "page"
                                             , Attr.class "flex items-center justify-center text-sm z-10 py-2 px-3 leading-tight text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
                                             ]
-                                            [ text "1" ]
+                                            [ Html.text "1" ]
                                         ]
-                                    , li []
-                                        [ a
+                                    , Html.li []
+                                        [ Html.a
                                             [ Attr.href "#"
                                             , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                             ]
-                                            [ text "2" ]
+                                            [ Html.text "2" ]
                                         ]
-                                    , li []
-                                        [ a
+                                    , Html.li []
+                                        [ Html.a
                                             [ Attr.href "#"
                                             , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                             ]
-                                            [ text "3" ]
+                                            [ Html.text "3" ]
                                         ]
-                                    , li []
-                                        [ a
+                                    , Html.li []
+                                        [ Html.a
                                             [ Attr.href "#"
                                             , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                             ]
-                                            [ text "..." ]
+                                            [ Html.text "..." ]
                                         ]
-                                    , li []
-                                        [ a
+                                    , Html.li []
+                                        [ Html.a
                                             [ Attr.href "#"
                                             , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                             ]
-                                            [ text "100" ]
+                                            [ Html.text "100" ]
                                         ]
-                                    , li []
-                                        [ button
+                                    , Html.li []
+                                        [ Html.button
                                             [ Attr.class "flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                                             , Events.onClick <| PageChanged <| model.pageIndex + 1
                                             ]
-                                            [ span
+                                            [ Html.span
                                                 [ Attr.class "sr-only"
                                                 ]
-                                                [ text "Next" ]
-                                            , Icons.chevronRight
+                                                [ Html.text "Next" ]
+                                            , Icon.chevronRight
                                             ]
                                         ]
                                     ]

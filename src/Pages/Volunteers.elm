@@ -86,6 +86,7 @@ init user shared () =
 type Msg
     = PageChanged Int
     | OnClickOutside
+    | EditVolunteer
     | ToastMsg Toast.Msg
     | AddToast String To.ToastType
     | FilterStringChanged String
@@ -107,6 +108,11 @@ update user shared msg model =
             in
             ( { model | tray = newTray }
             , Effect.sendCmd <| Cmd.map ToastMsg newTmesg
+            )
+
+        EditVolunteer ->
+            ( model
+            , Effect.sendMsg <| AddToast "Not implemented yet!" To.Warning
             )
 
         AddToast message type_ ->
@@ -265,6 +271,7 @@ viewVolunteer model user volunteer =
                     { open = model.openMenuOption == Just volunteer.id
                     , toggle = MenuOptionToggle volunteer.id
                     , onDelete = RequestDeleteVolunteer <| Just volunteer
+                    , onWarning = EditVolunteer
                     , dropdownId = "volunteer-dropdown"
                     }
             ]

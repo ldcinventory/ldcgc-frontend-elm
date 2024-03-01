@@ -46,10 +46,11 @@ view :
     { open : Bool
     , toggle : msg
     , onDelete : msg -- FIXME: temporary, this is supper crappy...
+    , onWarning : msg -- FIXME: this is EVEN CRAPPIER!
     , dropdownId : String
     }
     -> Html msg
-view { open, toggle, onDelete, dropdownId } =
+view { open, toggle, onDelete, onWarning, dropdownId } =
     Html.div
         [ Attr.class "flex items-center justify-end"
         , Attr.id dropdownId
@@ -91,6 +92,7 @@ view { open, toggle, onDelete, dropdownId } =
                 [ Html.li []
                     [ Html.a
                         [ Attr.href "#"
+                        , Events.onClick onWarning
                         , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                         ]
                         [ Html.text "Show" ]
@@ -98,6 +100,7 @@ view { open, toggle, onDelete, dropdownId } =
                 , Html.li []
                     [ Html.a
                         [ Attr.href "#"
+                        , Events.onClick onWarning
                         , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                         ]
                         [ Html.text "Edit" ]

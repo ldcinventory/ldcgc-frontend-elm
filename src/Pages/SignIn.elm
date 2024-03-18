@@ -279,7 +279,7 @@ view model =
             [ Attr.class "bg-color-gray-50 dark:bg-gray-900"
             ]
             [ Html.div
-                [ Attr.class "flex flex-col items-center justify-center px-6 py-8 mx-auto lg:py-0 md:h-screen"
+                [ Attr.class "flex flex-col items-center justify-start md:justify-center px-6 py-8 mx-auto lg:py-0 h-screen"
                 ]
                 [ Html.a
                     [ Attr.href "#"

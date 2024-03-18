@@ -2,6 +2,8 @@ module Layouts.Sidebar exposing (Model, Msg, Props, layout)
 
 import Api.SignOut
 import Auth
+import Browser.Events
+import Components.Dropdown as Dropdown
 import Components.Icons as Icon
 import Effect exposing (Effect)
 import Html exposing (Html, a, aside, button, div, li, span, text, ul)
@@ -58,15 +60,21 @@ init _ =
 
 type Msg
     = UserClickedSignOut
-    | SidebarToggled
+    | OpenSidebar
+    | OnClickOutside
     | SignOutApiResponded (Result Http.Error Api.SignOut.Data)
 
 
 update : Props -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update props shared msg model =
     case msg of
-        SidebarToggled ->
-            ( { model | isSidebarOpen = not model.isSidebarOpen }
+        OpenSidebar ->
+            ( { model | isSidebarOpen = True }
+            , Effect.none
+            )
+
+        OnClickOutside ->
+            ( { model | isSidebarOpen = False }
             , Effect.none
             )
 
@@ -91,8 +99,12 @@ update props shared msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions { isSidebarOpen } =
+    if isSidebarOpen then
+        Browser.Events.onMouseDown (Dropdown.outsideTarget OnClickOutside "sidebar-toggle")
+
+    else
+        Sub.none
 
 
 
@@ -130,14 +142,16 @@ view props _ { toContentMsg, content, model } =
 
 viewSidebar : Model -> Html Msg
 viewSidebar model =
-    Html.div []
+    Html.div
+        [ Attr.class "absolute ml-0" ]
         [ button
             [ Attr.attribute "data-drawer-target" "default-sidebar"
             , Attr.attribute "data-drawer-toggle" "default-sidebar"
             , Attr.attribute "aria-controls" "default-sidebar"
+            , Attr.id "sidebar-toggle"
             , Attr.type_ "button"
             , Attr.class "inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-            , Events.onClick SidebarToggled
+            , Events.onClick OpenSidebar
             ]
             [ span
                 [ Attr.class "sr-only"
@@ -169,7 +183,6 @@ viewSidebar model =
                     [ li []
                         [ a
                             [ Route.Path.href <| Route.Path.Home_
-                            , Events.onClick SidebarToggled
                             , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
                             [ Icon.dashboard
@@ -182,7 +195,6 @@ viewSidebar model =
                     , li []
                         [ a
                             [ Route.Path.href <| Route.Path.Tools
-                            , Events.onClick SidebarToggled
                             , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
                             [ Icon.tools
@@ -195,7 +207,6 @@ viewSidebar model =
                     , li []
                         [ a
                             [ Route.Path.href <| Route.Path.Volunteers
-                            , Events.onClick SidebarToggled
                             , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
                             [ Icon.volunteers
@@ -229,10 +240,10 @@ viewMainContent { title, content } =
         [ Attr.class "flex grow flex-col"
         ]
         [ Html.section
-            [ Attr.class "p-4 sm:ml-64" ]
+            [ Attr.class "p-4 pl-14 sm:ml-0 md:ml-64" ]
             [ Html.div
                 [ Attr.class "font-extrabold text-2xl" ]
                 [ Html.text title ]
             ]
-        , Html.div [ Attr.class "p-4 sm:ml-64 h-full" ] content.body
+        , Html.div [ Attr.class "p-0 sm:p-4 sm:ml-0 md:ml-64 h-full" ] content.body
         ]

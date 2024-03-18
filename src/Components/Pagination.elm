@@ -101,7 +101,7 @@ view config =
     let
         numPages : Int
         numPages =
-            config.numItems + 1 // config.itemsPerPage
+            (config.numItems + config.itemsPerPage - 1) // config.itemsPerPage
 
         prevDisabled : Bool
         prevDisabled =
@@ -109,7 +109,7 @@ view config =
 
         nextDisabled : Bool
         nextDisabled =
-            config.currentPage == config.numItems
+            config.currentPage == numPages
 
         pages : List String
         pages =

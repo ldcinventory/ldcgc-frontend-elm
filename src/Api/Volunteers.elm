@@ -4,6 +4,8 @@ import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
 import Json.Decode.Extra as Decode
+import List.Extra as List
+import Maybe.Extra as Maybe
 import Regex exposing (Regex)
 import Shared.Model exposing (Volunteer, Volunteers)
 import Url.Builder as Url
@@ -11,13 +13,28 @@ import Url.Builder as Url
 
 decoder : Decode.Decoder Volunteers
 decoder =
-    Decode.field "data" <|
-        Decode.oneOf
-            [ Decode.list volunteerDecoder
+    Decode.succeed Volunteers
+        |> Decode.andMap
+            (Decode.field "message" Decode.string
+                |> Decode.map
+                    (\serverMsg ->
+                        serverMsg
+                            -- Server responds with: "Found 18072 volunteer/s" 🫠
+                            |> String.split " "
+                            |> List.getAt 1
+                            |> Maybe.andThen String.toInt
+                            |> Maybe.withDefault 0
+                    )
+            )
+        |> Decode.andMap
+            (Decode.field "data" <|
+                Decode.oneOf
+                    [ Decode.list volunteerDecoder
 
-            -- When searching by builder assistand id, only one volunteer is returned!
-            , Decode.map List.singleton volunteerDecoder
-            ]
+                    -- When searching by builder assistand id, only one volunteer is returned!
+                    , Decode.map List.singleton volunteerDecoder
+                    ]
+            )
 
 
 messageDecoder : Decode.Decoder String

@@ -6,6 +6,7 @@ import Browser.Events
 import Components.Button as Button
 import Components.Dropdown as Dropdown
 import Components.Icons as Icon
+import Components.Pagination as Pagination
 import Components.Spinner as Spinner
 import Components.Toast as To
 import Effect exposing (Effect)
@@ -171,7 +172,10 @@ update user shared msg model =
 
         DeleteVolunteerResponse volunteer (Ok _) ->
             ( { model
-                | volunteers = RemoteData.map (List.remove volunteer) model.volunteers
+                | volunteers =
+                    RemoteData.map
+                        (\volunteers -> { volunteers | list = List.remove volunteer volunteers.list })
+                        model.volunteers
               }
             , Effect.sendMsg <| AddToast "Volunteer deleted correctly." To.Success
             )
@@ -445,93 +449,16 @@ view user model =
                                             ]
                                         ]
                                     , Html.tbody [] <|
-                                        List.map (viewVolunteer model user) volunteers
+                                        List.map (viewVolunteer model user) volunteers.list
                                     ]
                                 ]
-                            , Html.nav
-                                -- TODO: extract pagination and use something like https://package.elm-lang.org/packages/jschomay/elm-paginate/latest/Paginate
-                                [ Attr.class "flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-                                , Attr.attribute "aria-label" "Table navigation"
-                                ]
-                                [ Html.span
-                                    [ Attr.class "text-sm font-normal text-gray-500 dark:text-gray-400"
-                                    ]
-                                    [ Html.text "Showing "
-                                    , Html.span
-                                        [ Attr.class "font-semibold text-gray-900 dark:text-white"
-                                        ]
-                                        [ Html.text "1-10" ]
-                                    , Html.text " of "
-                                    , Html.span
-                                        [ Attr.class "font-semibold text-gray-900 dark:text-white"
-                                        ]
-                                        [ Html.text "1000" ]
-                                    ]
-                                , Html.ul
-                                    [ Attr.class "inline-flex items-stretch -space-x-px"
-                                    ]
-                                    [ Html.li []
-                                        [ Html.button
-                                            [ Events.onClick <| PageChanged <| model.pageIndex - 1
-                                            , Attr.class "flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                            ]
-                                            [ Html.span
-                                                [ Attr.class "sr-only"
-                                                ]
-                                                [ Html.text "Previous" ]
-                                            , Icon.chevronLeft
-                                            ]
-                                        ]
-                                    , Html.li []
-                                        [ Html.a
-                                            [ Attr.href "#"
-                                            , Attr.attribute "aria-current" "page"
-                                            , Attr.class "flex items-center justify-center text-sm z-10 py-2 px-3 leading-tight text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-                                            ]
-                                            [ Html.text "1" ]
-                                        ]
-                                    , Html.li []
-                                        [ Html.a
-                                            [ Attr.href "#"
-                                            , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                            ]
-                                            [ Html.text "2" ]
-                                        ]
-                                    , Html.li []
-                                        [ Html.a
-                                            [ Attr.href "#"
-                                            , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                            ]
-                                            [ Html.text "3" ]
-                                        ]
-                                    , Html.li []
-                                        [ Html.a
-                                            [ Attr.href "#"
-                                            , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                            ]
-                                            [ Html.text "..." ]
-                                        ]
-                                    , Html.li []
-                                        [ Html.a
-                                            [ Attr.href "#"
-                                            , Attr.class "flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                            ]
-                                            [ Html.text "100" ]
-                                        ]
-                                    , Html.li []
-                                        [ Html.button
-                                            [ Attr.class "flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                                            , Events.onClick <| PageChanged <| model.pageIndex + 1
-                                            ]
-                                            [ Html.span
-                                                [ Attr.class "sr-only"
-                                                ]
-                                                [ Html.text "Next" ]
-                                            , Icon.chevronRight
-                                            ]
-                                        ]
-                                    ]
-                                ]
+                            , Pagination.view
+                                { itemsPerPage = 10
+                                , currentPage = model.pageIndex + 1
+                                , numItems = RemoteData.unwrap 0 .numVolunteers model.volunteers
+                                , next = PageChanged <| model.pageIndex + 1
+                                , prev = PageChanged <| model.pageIndex - 1
+                                }
                             ]
                         ]
                     ]

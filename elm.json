@@ -20,6 +20,7 @@
             "elm-community/json-extra": "4.3.0",
             "elmcraft/core-extra": "2.0.0",
             "emilianobovetti/elm-toast": "1.1.0",
+            "jschomay/elm-bounded-number": "2.1.2",
             "krisajenkins/remotedata": "6.0.1",
             "simonh1000/elm-jwt": "7.1.1"
         },

@@ -186,7 +186,10 @@ update user shared msg model =
             )
 
         FilterStringChanged filterString ->
-            ( { model | filterString = filterString }
+            ( { model
+                | filterString = filterString
+                , pageIndex = 0
+              }
             , delayMsg <| DelayedFilterStringChanged filterString
             )
 
@@ -364,11 +367,11 @@ view user model =
             Success volunteers ->
                 [ viewNotification model
                 , Html.section
-                    [ Attr.class "bg-gray-50 dark:bg-gray-900 p-3 sm:p-5"
+                    [ Attr.class "bg-gray-50 dark:bg-gray-900 p-0 sd:p-3 sm:p-5"
                     ]
                     [ Html.viewMaybe viewDeleteModal model.deleteVolunteerModal
                     , Html.div
-                        [ Attr.class "mx-auto max-w-screen-xl px-4 lg:px-12"
+                        [ Attr.class "mx-auto max-w-screen-xl px-0 sm:px-4 lg:px-12"
                         ]
                         [ Html.div
                             [ Attr.class "bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"

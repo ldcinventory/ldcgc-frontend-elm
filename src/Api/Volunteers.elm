@@ -15,7 +15,7 @@ decoder : Decode.Decoder Volunteers
 decoder =
     Decode.succeed Volunteers
         |> Decode.andMap
-            (Decode.field "message" Decode.string
+            (messageDecoder
                 |> Decode.map
                     (\serverMsg ->
                         serverMsg

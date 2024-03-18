@@ -29,8 +29,8 @@ about deploying your app for free using Netlify or Vercel.
 - [ ] Customise NotFound 404 page
 - [ ] Only store user in localStorage if ✅ Remember me
 - [ ] Extract Components/Modal and re-use it!
-- [ ] Extract Components/Button and re-use it!
+- [x] Extract Components/Button and re-use it!
 - [ ] Implement password recovery workflow
-- [ ] Implement responsive sidebar menu
-- [ ] Implement volunteers page
+- [x] Implement responsive sidebar menu
+- [x] Implement volunteers page
 - [ ] Implement tools page

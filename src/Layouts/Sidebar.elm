@@ -2,9 +2,11 @@ module Layouts.Sidebar exposing (Model, Msg, Props, layout)
 
 import Api.SignOut
 import Auth
+import Components.Icons as Icon
 import Effect exposing (Effect)
-import Html exposing (Html)
+import Html exposing (Html, a, aside, button, div, li, span, text, ul)
 import Html.Attributes as Attr
+import Html.Attributes.Extra as Attr
 import Html.Events as Events
 import Html.Extra as Html
 import Http exposing (Error(..))
@@ -37,12 +39,14 @@ layout props shared route =
 
 type alias Model =
     { errors : List Http.Error
+    , isSidebarOpen : Bool
     }
 
 
 init : () -> ( Model, Effect Msg )
 init _ =
     ( { errors = []
+      , isSidebarOpen = False
       }
     , Effect.none
     )
@@ -54,12 +58,18 @@ init _ =
 
 type Msg
     = UserClickedSignOut
+    | SidebarToggled
     | SignOutApiResponded (Result Http.Error Api.SignOut.Data)
 
 
 update : Props -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update props shared msg model =
     case msg of
+        SidebarToggled ->
+            ( { model | isSidebarOpen = not model.isSidebarOpen }
+            , Effect.none
+            )
+
         UserClickedSignOut ->
             ( model
             , Api.SignOut.post
@@ -98,15 +108,12 @@ view :
         , model : Model
         }
     -> View contentMsg
-view props route { toContentMsg, content, model } =
+view props _ { toContentMsg, content, model } =
     { title = content.title ++ " | LDC GC"
     , body =
         [ Html.div
             [ Attr.class "flex h-screen bg-color-gray-50 dark:bg-gray-900 dark:text-white" ]
-            [ viewSidebar
-                { user = props.user
-                , route = route
-                }
+            [ viewSidebar model
                 |> Html.map toContentMsg
             , viewMainContent
                 { title = props.title
@@ -121,94 +128,97 @@ view props route { toContentMsg, content, model } =
     }
 
 
-viewSidebar : { user : Auth.User, route : Route () } -> Html Msg
-viewSidebar { user, route } =
-    Html.aside
-        [ Attr.class "flex flex-col p-2 border-r border-gray-200 min-w-[200px] dark:border dark:border-gray-700"
-        ]
-        [ viewAppNameAndLogo
-        , viewSidebarLinks route
-        , viewSignOutButton user
-        ]
-
-
-viewAppNameAndLogo : Html msg
-viewAppNameAndLogo =
-    Html.div
-        [ Attr.class "flex items-center p-3 flex-col"
-        ]
-        [ Html.figure []
-            [ Html.img
-                [ Attr.src "/logo.png"
-                , Attr.alt "LDC GC Logo"
-                , Attr.width 100
-                ]
-                []
+viewSidebar : Model -> Html Msg
+viewSidebar model =
+    Html.div []
+        [ button
+            [ Attr.attribute "data-drawer-target" "default-sidebar"
+            , Attr.attribute "data-drawer-toggle" "default-sidebar"
+            , Attr.attribute "aria-controls" "default-sidebar"
+            , Attr.type_ "button"
+            , Attr.class "inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+            , Events.onClick SidebarToggled
             ]
-        , Html.span
-            [ Attr.class "font-bold pl-2" ]
-            [ Html.text "LDC GC" ]
-        ]
+            [ span
+                [ Attr.class "sr-only"
+                ]
+                [ text "Open sidebar" ]
+            , Icon.sidebar
+            ]
+        , aside
+            [ Attr.id "default-sidebar"
+            , Attr.class "fixed top-0 left-0 z-40 w-64 h-screen transition-transform sm:translate-x-0"
+            , Attr.attribute "aria-label" "Sidebar"
+            , Attr.attributeIf model.isSidebarOpen <| Attr.attribute "role" "dialog"
+            , Attr.classList
+                [ ( "-translate-x-full", not model.isSidebarOpen )
+                , ( "transform-none", model.isSidebarOpen )
+                ]
+            , if model.isSidebarOpen then
+                Attr.attribute "aria-modal" "true"
 
-
-viewSidebarLinks : Route () -> Html msg
-viewSidebarLinks route =
-    let
-        viewSidebarLink : ( String, Route.Path.Path ) -> Html msg
-        viewSidebarLink ( label, path ) =
-            Html.li []
-                [ Html.a
-                    [ Route.Path.href path
-                    , Attr.classList
-                        [ ( "font-bold", route.path == path )
+              else
+                Attr.attribute "aria-hidden" "true"
+            ]
+            [ div
+                [ Attr.class "h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800"
+                ]
+                [ ul
+                    [ Attr.class "space-y-2 font-medium"
+                    ]
+                    [ li []
+                        [ a
+                            [ Route.Path.href <| Route.Path.Home_
+                            , Events.onClick SidebarToggled
+                            , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                            ]
+                            [ Icon.dashboard
+                            , span
+                                [ Attr.class "ms-3"
+                                ]
+                                [ text "Dashboard" ]
+                            ]
+                        ]
+                    , li []
+                        [ a
+                            [ Route.Path.href <| Route.Path.Tools
+                            , Events.onClick SidebarToggled
+                            , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                            ]
+                            [ Icon.tools
+                            , span
+                                [ Attr.class "flex-1 ms-3 whitespace-nowrap"
+                                ]
+                                [ text "Tools" ]
+                            ]
+                        ]
+                    , li []
+                        [ a
+                            [ Route.Path.href <| Route.Path.Volunteers
+                            , Events.onClick SidebarToggled
+                            , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                            ]
+                            [ Icon.volunteers
+                            , span
+                                [ Attr.class "flex-1 ms-3 whitespace-nowrap"
+                                ]
+                                [ text "Volunteers" ]
+                            ]
+                        ]
+                    , li []
+                        [ a
+                            [ Events.onClick UserClickedSignOut
+                            , Attr.class "flex cursor-pointer items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                            ]
+                            [ Icon.signOut
+                            , span
+                                [ Attr.class "flex-1 ms-3 whitespace-nowrap"
+                                ]
+                                [ text "Sign Out" ]
+                            ]
                         ]
                     ]
-                    [ Html.text label ]
                 ]
-    in
-    Html.div [ Attr.class "flex grow" ]
-        [ Html.ul
-            [ Attr.class "list-none" ]
-            (List.map viewSidebarLink
-                [ ( "Dashboard", Route.Path.Home_ )
-                , ( "Volunteers", Route.Path.Volunteers )
-                , ( "Tools", Route.Path.Tools )
-                ]
-            )
-        ]
-
-
-viewSignOutButton : Auth.User -> Html Msg
-viewSignOutButton user =
-    Html.div
-        [ Attr.class "w-full" ]
-        [ Html.div [ Attr.class "flex items-center flex-col gap-2" ]
-            [ user.name
-                |> Html.viewMaybe
-                    (\name ->
-                        Html.div [] [ Html.text <| "Welcome, " ++ name ++ "! 👋🏻" ]
-                    )
-            , Html.div [] [ Html.text user.email ]
-            , Html.button
-                [ Attr.class """
-                    w-full
-                    text-white
-                    bg-primary-600
-                    font-medium
-                    rounded-lg
-                    text-sm
-                    px-5
-                    py-2.5
-                    text-center
-                    focus:ring-4
-                    focus:outline-none
-                    focus:ring-primary-300
-                    hover:bg-primary-700
-                    disabled:opacity-50
-                    """
-                , Events.onClick UserClickedSignOut
-                ]
-                [ Html.text "Sign out" ]
             ]
         ]
 
@@ -219,10 +229,10 @@ viewMainContent { title, content } =
         [ Attr.class "flex grow flex-col"
         ]
         [ Html.section
-            [ Attr.class "p-4" ]
+            [ Attr.class "p-4 sm:ml-64" ]
             [ Html.div
                 [ Attr.class "font-extrabold text-2xl" ]
                 [ Html.text title ]
             ]
-        , Html.div [ Attr.class "p-4 h-full" ] content.body
+        , Html.div [ Attr.class "p-4 sm:ml-64 h-full" ] content.body
         ]

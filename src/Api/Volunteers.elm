@@ -1,4 +1,4 @@
-module Api.Volunteers exposing (delete, get)
+module Api.Volunteers exposing (VolunteerDetail, delete, get, getDetail)
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
@@ -7,7 +7,9 @@ import Json.Decode.Extra as Decode
 import List.Extra as List
 import Maybe.Extra as Maybe
 import Regex exposing (Regex)
-import Shared.Model exposing (Volunteer, Volunteers)
+import Shared.Json
+import Shared.Model exposing (Absence, Volunteer, Volunteers)
+import Time
 import Url.Builder as Url
 
 
@@ -165,3 +167,62 @@ handleHttpResponse response =
 
                 Err _ ->
                     Err <| BadBody "Something unexpected happened"
+
+
+
+-- Volunteer Detail
+
+
+type alias VolunteerDetail =
+    { id : Int
+    , name : String
+    , lastName : String
+    , builderAssistantId : String
+    , isActive : Bool
+    , absences : Maybe (List Absence)
+    , availability : List Time.Weekday
+    }
+
+
+getDetail :
+    { onResponse : Result Http.Error VolunteerDetail -> msg
+    , tokens : Shared.Model.Tokens
+    , apiUrl : String
+    , builderAssistantId : String
+    }
+    -> Effect msg
+getDetail options =
+    let
+        cmd : Cmd msg
+        cmd =
+            Http.request
+                { method = "GET"
+                , url =
+                    Url.relative [ options.apiUrl, "volunteers" ]
+                        [ Url.string "builderAssistantId" options.builderAssistantId
+                        ]
+                , headers =
+                    [ Http.header "x-signature-token" options.tokens.signatureToken
+                    , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
+                    ]
+                , body = Http.emptyBody
+                , expect = Http.expectJson options.onResponse volunteerDetailDecoder
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+    in
+    Effect.sendCmd cmd
+
+
+volunteerDetailDecoder : Decode.Decoder VolunteerDetail
+volunteerDetailDecoder =
+    Decode.field "data"
+        (Decode.succeed VolunteerDetail
+            |> Decode.andMap (Decode.field "id" Decode.int)
+            |> Decode.andMap (Decode.field "name" Decode.string)
+            |> Decode.andMap (Decode.field "lastName" Decode.string)
+            |> Decode.andMap (Decode.field "builderAssistantId" Decode.string)
+            |> Decode.andMap (Decode.field "isActive" Decode.bool)
+            |> Decode.andMap (Decode.optionalField "absences" <| Decode.list Shared.Json.decodeAbsence)
+            |> Decode.andMap (Decode.field "availability" <| Decode.list Shared.Json.decodeAvailability)
+        )

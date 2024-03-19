@@ -54,3 +54,11 @@ type alias Volunteer =
     , builderAssistantId : String
     , isActive : Bool
     }
+
+
+type alias Absence =
+    { id : Int
+    , dateFrom : String
+    , dateTo : String
+    , builderAssistantId : String
+    }

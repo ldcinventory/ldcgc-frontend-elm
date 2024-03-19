@@ -1,10 +1,17 @@
-module Shared.Json exposing (decodeRole, decodeUser, encodeUser)
+module Shared.Json exposing
+    ( decodeAbsence
+    , decodeAvailability
+    , decodeRole
+    , decodeUser
+    , encodeUser
+    )
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Extra as Decode
 import Json.Encode as Encode exposing (Value)
 import Json.Encode.Extra as Encode
 import Shared.Model exposing (Role(..), User)
+import Time
 
 
 encodeRole : Role -> Value
@@ -75,3 +82,44 @@ tokensDecoder =
     Decode.succeed Shared.Model.Tokens
         |> Decode.andMap (Decode.field "signatureToken" Decode.string)
         |> Decode.andMap (Decode.field "headerPayloadToken" Decode.string)
+
+
+decodeAbsence : Decoder Shared.Model.Absence
+decodeAbsence =
+    Decode.succeed Shared.Model.Absence
+        |> Decode.andMap (Decode.field "id" Decode.int)
+        |> Decode.andMap (Decode.field "dateFrom" Decode.string)
+        |> Decode.andMap (Decode.field "dateTo" Decode.string)
+        |> Decode.andMap (Decode.field "builderAssistantId" Decode.string)
+
+
+decodeAvailability : Decoder Time.Weekday
+decodeAvailability =
+    Decode.string
+        |> Decode.andThen
+            (\role ->
+                case role of
+                    "MONDAY" ->
+                        Decode.succeed Time.Mon
+
+                    "TUESDAY" ->
+                        Decode.succeed Time.Tue
+
+                    "WEDNESDAY" ->
+                        Decode.succeed Time.Wed
+
+                    "THURSDAY" ->
+                        Decode.succeed Time.Thu
+
+                    "FRIDAY" ->
+                        Decode.succeed Time.Fri
+
+                    "SATURDAY" ->
+                        Decode.succeed Time.Sat
+
+                    "SUNDAY" ->
+                        Decode.succeed Time.Sun
+
+                    str ->
+                        Decode.fail <| "Invalid availability found: " ++ str
+            )

@@ -1,6 +1,6 @@
 # ldcgc-frontend-elm
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/433924af-2aa7-45a8-9ec7-300c96277e87/deploy-status)](https://app.netlify.com/sites/spiffy-liger-0b866a/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/433924af-2aa7-45a8-9ec7-300c96277e87/deploy-status)](https://app.netlify.com/sites/ldcgc-frontend/deploys)
 
 > Built with [Elm Land](https://elm.land) 🌈
 

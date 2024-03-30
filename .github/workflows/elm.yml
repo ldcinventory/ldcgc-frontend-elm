@@ -16,7 +16,7 @@ jobs:
           node-version: ${{ env.NVMRC }}
       - run: npm ci
       - name: Generate elm-land stuff
-        run: elm-land generate
+        run: npx elm-land generate
       - uses: jorelali/setup-elm@v5
         with:
           elm-version: 0.19.1

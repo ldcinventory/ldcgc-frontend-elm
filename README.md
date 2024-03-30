@@ -1,5 +1,6 @@
 # ldcgc-frontend-elm
 
+[![Elm CI](https://github.com/ldcinventory/ldcgc-frontend-elm/workflows/Elm%20CI/badge.svg)](https://github.com/ldcinventory/ldcgc-frontend-elm/actions)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/433924af-2aa7-45a8-9ec7-300c96277e87/deploy-status)](https://app.netlify.com/sites/ldcgc-frontend/deploys)
 
 > Built with [Elm Land](https://elm.land) 🌈

@@ -1,4 +1,4 @@
-module Api.Volunteers exposing (delete, get)
+module Api.Volunteers exposing (delete, errorToString, get)
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
@@ -15,24 +15,22 @@ decoder : Decode.Decoder Volunteers
 decoder =
     Decode.succeed Volunteers
         |> Decode.andMap
-            (messageDecoder
+            (Decode.optionalField "message" Decode.string
                 |> Decode.map
-                    (\serverMsg ->
-                        serverMsg
-                            -- Server responds with: "Found 18072 volunteer/s" 🫠
-                            |> String.split " "
-                            |> List.getAt 1
-                            |> Maybe.andThen String.toInt
-                            |> Maybe.withDefault 0
+                    -- Server responds with: "Found 18072 volunteer/s" 🫠
+                    (Maybe.withDefault "Found 1 volunteer/s"
+                        >> String.split " "
+                        >> List.getAt 1
+                        >> Maybe.andThen String.toInt
                     )
             )
         |> Decode.andMap
             (Decode.field "data" <|
                 Decode.oneOf
-                    [ Decode.list volunteerDecoder
+                    [ Decode.field "elements" (Decode.list volunteerDecoder)
 
                     -- When searching by builder assistand id, only one volunteer is returned!
-                    , Decode.map List.singleton volunteerDecoder
+                    , Decode.list volunteerDecoder
                     ]
             )
 
@@ -165,3 +163,28 @@ handleHttpResponse response =
 
                 Err _ ->
                     Err <| BadBody "Something unexpected happened"
+
+
+errorToString : Http.Error -> String
+errorToString error =
+    case error of
+        BadUrl url ->
+            "The URL " ++ url ++ " was invalid"
+
+        Timeout ->
+            "Unable to reach the server, try again"
+
+        NetworkError ->
+            "Unable to reach the server, check your network connection"
+
+        BadStatus 500 ->
+            "The server had a problem, try again later"
+
+        BadStatus 400 ->
+            "Verify your information and try again"
+
+        BadStatus _ ->
+            "Unknown error"
+
+        BadBody errorMessage ->
+            errorMessage

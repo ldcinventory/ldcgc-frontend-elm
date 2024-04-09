@@ -42,7 +42,9 @@ type alias User =
 
 
 type alias Volunteers =
-    { numVolunteers : Maybe Int
+    { numVolunteers : Int
+    , totalPages : Int
+    , elementsThisPage : Int
     , list : List Volunteer
     }
 

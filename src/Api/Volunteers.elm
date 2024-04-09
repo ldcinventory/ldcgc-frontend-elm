@@ -15,24 +15,13 @@ decoder : Decode.Decoder Volunteers
 decoder =
     Decode.succeed Volunteers
         |> Decode.andMap
-            (Decode.optionalField "message" Decode.string
-                |> Decode.map
-                    -- Server responds with: "Found 18072 volunteer/s" 🫠
-                    (Maybe.withDefault "Found 1 volunteer/s"
-                        >> String.split " "
-                        >> List.getAt 1
-                        >> Maybe.andThen String.toInt
-                    )
-            )
+            (Decode.at [ "data", "numElements" ] Decode.int)
         |> Decode.andMap
-            (Decode.field "data" <|
-                Decode.oneOf
-                    [ Decode.field "elements" (Decode.list volunteerDecoder)
-
-                    -- When searching by builder assistand id, only one volunteer is returned!
-                    , Decode.list volunteerDecoder
-                    ]
-            )
+            (Decode.at [ "data", "totalPages" ] Decode.int)
+        |> Decode.andMap
+            (Decode.at [ "data", "elementsThisPage" ] Decode.int)
+        |> Decode.andMap
+            (Decode.at [ "data", "elements" ] (Decode.list volunteerDecoder))
 
 
 messageDecoder : Decode.Decoder String

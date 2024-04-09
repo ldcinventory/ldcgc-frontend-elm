@@ -463,9 +463,9 @@ view user model =
                             , Pagination.view
                                 { itemsPerPage = 10
                                 , currentPage = model.pageIndex + 1
-                                , numItems =
-                                    model.volunteers
-                                        |> RemoteData.unwrap 0 (.numVolunteers >> Maybe.withDefault 0)
+                                , numItems = RemoteData.unwrap 0 .numVolunteers model.volunteers
+                                , totalPages = RemoteData.unwrap 0 .totalPages model.volunteers
+                                , elementsThisPage = RemoteData.unwrap 0 .elementsThisPage model.volunteers
                                 , next = PageChanged <| model.pageIndex + 1
                                 , prev = PageChanged <| model.pageIndex - 1
                                 }

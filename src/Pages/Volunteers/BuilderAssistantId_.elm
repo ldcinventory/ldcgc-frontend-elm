@@ -12,6 +12,7 @@ import Page exposing (Page)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Shared
+import Time
 import View exposing (View)
 
 
@@ -88,11 +89,13 @@ subscriptions _ =
 
 
 -- VIEW
+-- TODO: fix availability on mobile
+-- TODO: add list of absences (CRUD)
 
 
 view : Model -> View Msg
 view model =
-    { title = "Pages.Volunteers.BuilderAssistantId_"
+    { title = "Volunteer Details"
     , body =
         case model.volunteer of
             NotAsked ->
@@ -109,8 +112,164 @@ view model =
                     ]
                 ]
 
-            Success { name } ->
-                [ Html.div []
-                    [ Html.text name ]
+            Success { name, lastName, availability, builderAssistantId } ->
+                [ Html.div
+                    [ Attr.class "p-3 flex flex-col gap-4 items-start" ]
+                    [ Html.h2
+                        [ Attr.class "text-4xl font-extrabold dark:text-white"
+                        ]
+                        [ Html.text <| name ++ " " ++ lastName ]
+                    , Html.div [ Attr.class "flex gap-2" ]
+                        [ Html.div
+                            [ Attr.class "relative inline-flex items-center justify-center w-32 h-32 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600"
+                            ]
+                            [ Html.span
+                                [ Attr.class "font-medium text-gray-600 dark:text-gray-300"
+                                ]
+                                [ Html.text <| String.slice 0 1 name ++ String.slice 0 1 lastName ]
+                            ]
+                        , Html.div [ Attr.class "flex flex-col gap-2 justify-center align-middle" ]
+                            [ Html.text "Volunteer barcode"
+                            , Html.strong
+                                [ Attr.class "text-4xl font-barcode w-fit tracking-widest" ]
+                                [ Html.text builderAssistantId ]
+                            ]
+                        ]
+                    , Html.div
+                        [ Attr.attribute "classname" "h-screen bg-gray-100 p-6"
+                        ]
+                        [ Html.div
+                            [ Attr.class "w-full max-w-screen-sm mx-auto"
+                            ]
+                            [ Html.h3
+                                [ Attr.class "text-2xl font-extrabold dark:text-white mb-2"
+                                ]
+                                [ Html.text "Availability" ]
+                            , Html.div
+                                [ Attr.class "flex bg-gray-800 shadow-md justify-start md:justify-center rounded-lg mx-auto py-4 px-2"
+                                ]
+                                [ Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Mon availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
+                                                ]
+                                                [ Html.text "Mon" ]
+                                            ]
+                                        ]
+                                    ]
+                                , Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Tue availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
+                                                ]
+                                                [ Html.text "Tue" ]
+                                            ]
+                                        ]
+                                    ]
+                                , Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Wed availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 text-sm"
+                                                ]
+                                                [ Html.text "Wed" ]
+                                            ]
+                                        ]
+                                    ]
+                                , Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all\tduration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Thu availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
+                                                ]
+                                                [ Html.text "Thu" ]
+                                            ]
+                                        ]
+                                    ]
+                                , Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all\tduration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Fri availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
+                                                ]
+                                                [ Html.text "Fri" ]
+                                            ]
+                                        ]
+                                    ]
+                                , Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all\tduration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Sat availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
+                                                ]
+                                                [ Html.text "Sat" ]
+                                            ]
+                                        ]
+                                    ]
+                                , Html.div
+                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
+                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Sun availability ) ]
+                                    ]
+                                    [ Html.div
+                                        [ Attr.class "flex items-center px-4 py-4"
+                                        ]
+                                        [ Html.div
+                                            [ Attr.class "text-center"
+                                            ]
+                                            [ Html.p
+                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
+                                                ]
+                                                [ Html.text "Sun" ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
                 ]
     }

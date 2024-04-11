@@ -8,6 +8,7 @@ module Shared.Json exposing
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Extra as Decode
+import Json.Decode.Pipeline as Decode
 import Json.Encode as Encode exposing (Value)
 import Json.Encode.Extra as Encode
 import Shared.Model exposing (Role(..), User)
@@ -71,26 +72,26 @@ decodeUser : Decoder User
 decodeUser =
     Decode.succeed User
         |> Decode.andMap tokensDecoder
-        |> Decode.andMap (Decode.field "id" Decode.int)
-        |> Decode.andMap (Decode.optionalField "volunteer" (Decode.field "name" Decode.string))
-        |> Decode.andMap (Decode.field "role" decodeRole)
-        |> Decode.andMap (Decode.field "email" Decode.string)
+        |> Decode.required "id" Decode.int
+        |> Decode.optionalAt [ "volunteer", "name" ] (Decode.maybe Decode.string) Nothing
+        |> Decode.required "role" decodeRole
+        |> Decode.required "email" Decode.string
 
 
 tokensDecoder : Decoder Shared.Model.Tokens
 tokensDecoder =
     Decode.succeed Shared.Model.Tokens
-        |> Decode.andMap (Decode.field "signatureToken" Decode.string)
-        |> Decode.andMap (Decode.field "headerPayloadToken" Decode.string)
+        |> Decode.required "signatureToken" Decode.string
+        |> Decode.required "headerPayloadToken" Decode.string
 
 
 decodeAbsence : Decoder Shared.Model.Absence
 decodeAbsence =
     Decode.succeed Shared.Model.Absence
-        |> Decode.andMap (Decode.field "id" Decode.int)
-        |> Decode.andMap (Decode.field "dateFrom" Decode.string)
-        |> Decode.andMap (Decode.field "dateTo" Decode.string)
-        |> Decode.andMap (Decode.field "builderAssistantId" Decode.string)
+        |> Decode.required "id" Decode.int
+        |> Decode.required "dateFrom" Decode.string
+        |> Decode.required "dateTo" Decode.string
+        |> Decode.required "builderAssistantId" Decode.string
 
 
 decodeAvailability : Decoder Time.Weekday

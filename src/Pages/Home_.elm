@@ -43,9 +43,10 @@ type alias Model =
 init : Auth.User -> () -> ( Model, Effect Msg )
 init user () =
     let
-        _ =
-            -- FIXME: delete this debug log when we actually read the expiry of the token
-            Debug.log "expiry" << Result.map Time.millisToPosix << Jwt.getTokenExpirationMillis <| user.tokens.headerPayloadToken ++ "." ++ user.tokens.signatureToken
+        expiry : Result Jwt.JwtError Time.Posix
+        expiry =
+            -- FIXME: delete this when we actually read the expiry of the token
+            Result.map Time.millisToPosix << Jwt.getTokenExpirationMillis <| user.tokens.headerPayloadToken ++ "." ++ user.tokens.signatureToken
     in
     ( {}
     , Effect.none

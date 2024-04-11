@@ -1,4 +1,4 @@
-module Api.Volunteers exposing (VolunteerDetail, delete, get, getDetail)
+module Api.Volunteers exposing (VolunteerDetail, delete, errorToString, get, getDetail)
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
@@ -17,26 +17,13 @@ decoder : Decode.Decoder Volunteers
 decoder =
     Decode.succeed Volunteers
         |> Decode.andMap
-            (messageDecoder
-                |> Decode.map
-                    (\serverMsg ->
-                        serverMsg
-                            -- Server responds with: "Found 18072 volunteer/s" 🫠
-                            |> String.split " "
-                            |> List.getAt 1
-                            |> Maybe.andThen String.toInt
-                            |> Maybe.withDefault 0
-                    )
-            )
+            (Decode.at [ "data", "numElements" ] Decode.int)
         |> Decode.andMap
-            (Decode.field "data" <|
-                Decode.oneOf
-                    [ Decode.list volunteerDecoder
-
-                    -- When searching by builder assistand id, only one volunteer is returned!
-                    , Decode.map List.singleton volunteerDecoder
-                    ]
-            )
+            (Decode.at [ "data", "totalPages" ] Decode.int)
+        |> Decode.andMap
+            (Decode.at [ "data", "elementsThisPage" ] Decode.int)
+        |> Decode.andMap
+            (Decode.at [ "data", "elements" ] (Decode.list volunteerDecoder))
 
 
 messageDecoder : Decode.Decoder String
@@ -226,3 +213,28 @@ volunteerDetailDecoder =
             |> Decode.andMap (Decode.optionalField "absences" <| Decode.list Shared.Json.decodeAbsence)
             |> Decode.andMap (Decode.field "availability" <| Decode.list Shared.Json.decodeAvailability)
         )
+
+
+errorToString : Http.Error -> String
+errorToString error =
+    case error of
+        BadUrl url ->
+            "The URL " ++ url ++ " was invalid"
+
+        Timeout ->
+            "Unable to reach the server, try again"
+
+        NetworkError ->
+            "Unable to reach the server, check your network connection"
+
+        BadStatus 500 ->
+            "The server had a problem, try again later"
+
+        BadStatus 400 ->
+            "Verify your information and try again"
+
+        BadStatus _ ->
+            "Unknown error"
+
+        BadBody errorMessage ->
+            errorMessage

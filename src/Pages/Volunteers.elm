@@ -129,7 +129,12 @@ update user shared msg model =
 
         VolunteersApiResponded (Err httpError) ->
             ( { model | volunteers = Failure httpError }
-            , Effect.sendMsg <| AddToast "The volunteers API responded with an error." To.Danger
+            , Effect.sendMsg <|
+                AddToast
+                    ("The volunteers API responded with an error: "
+                        ++ Api.Volunteers.errorToString httpError
+                    )
+                    To.Danger
             )
 
         VolunteersApiResponded (Ok volunteers) ->
@@ -492,6 +497,8 @@ view user model =
                                 { itemsPerPage = 10
                                 , currentPage = model.pageIndex + 1
                                 , numItems = RemoteData.unwrap 0 .numVolunteers model.volunteers
+                                , totalPages = RemoteData.unwrap 0 .totalPages model.volunteers
+                                , elementsThisPage = RemoteData.unwrap 0 .elementsThisPage model.volunteers
                                 , next = PageChanged <| model.pageIndex + 1
                                 , prev = PageChanged <| model.pageIndex - 1
                                 }

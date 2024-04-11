@@ -43,6 +43,8 @@ type alias User =
 
 type alias Volunteers =
     { numVolunteers : Int
+    , totalPages : Int
+    , elementsThisPage : Int
     , list : List Volunteer
     }
 

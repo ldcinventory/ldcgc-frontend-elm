@@ -93,33 +93,31 @@ view :
     { itemsPerPage : Int
     , numItems : Int
     , currentPage : Int
+    , totalPages : Int
+    , elementsThisPage : Int
     , next : msg
     , prev : msg
     }
     -> Html msg
 view config =
     let
-        numPages : Int
-        numPages =
-            (config.numItems + config.itemsPerPage - 1) // config.itemsPerPage
-
         prevDisabled : Bool
         prevDisabled =
             config.currentPage == 1
 
         nextDisabled : Bool
         nextDisabled =
-            config.currentPage == numPages
+            config.currentPage == config.totalPages
 
         pages : List String
         pages =
             elidedPager
                 { innerWindow = 1
                 , outerWindow = 1
-                , pageNumberView = \i _ -> String.fromInt i
+                , pageNumberView = \index _ -> String.fromInt index
                 , gapView = "..."
                 }
-                (Bounded.between 1 numPages |> Bounded.set config.currentPage)
+                (Bounded.between 1 config.totalPages |> Bounded.set config.currentPage)
     in
     Html.nav
         [ Attr.class "flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
@@ -132,12 +130,13 @@ view config =
             , Html.span
                 [ Attr.class "font-semibold text-gray-900 dark:text-white"
                 ]
-                [ Html.text <| "1-" ++ String.fromInt config.itemsPerPage ]
+                [ Html.text <| "1-" ++ String.fromInt config.elementsThisPage ]
             , Html.text " of "
             , Html.span
                 [ Attr.class "font-semibold text-gray-900 dark:text-white"
                 ]
-                [ Html.text <| String.fromInt numPages ]
+                [ Html.text <| String.fromInt config.totalPages ]
+            , Html.text " page/s"
             ]
         , Html.ul
             [ Attr.class "inline-flex items-stretch -space-x-px"

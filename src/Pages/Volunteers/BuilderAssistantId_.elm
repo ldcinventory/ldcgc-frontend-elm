@@ -2,8 +2,10 @@ module Pages.Volunteers.BuilderAssistantId_ exposing (Model, Msg, page)
 
 import Api.Volunteers
 import Auth
+import Components.Spinner as Spinner
 import Effect exposing (Effect)
 import Html
+import Html.Attributes as Attr
 import Http
 import Layouts
 import Page exposing (Page)
@@ -91,5 +93,24 @@ subscriptions _ =
 view : Model -> View Msg
 view model =
     { title = "Pages.Volunteers.BuilderAssistantId_"
-    , body = [ Html.text <| Debug.toString model.volunteer ]
+    , body =
+        case model.volunteer of
+            NotAsked ->
+                [ Html.text "Loading..."
+                ]
+
+            Loading ->
+                [ Spinner.view [ Attr.class "h-full w-full" ]
+                ]
+
+            Failure httpError ->
+                [ Html.div [ Attr.class "text-red-500" ]
+                    [ Html.text <| Api.Volunteers.errorToString httpError
+                    ]
+                ]
+
+            Success { name } ->
+                [ Html.div []
+                    [ Html.text name ]
+                ]
     }

@@ -182,9 +182,7 @@ getDetail options =
             Http.request
                 { method = "GET"
                 , url =
-                    Url.relative [ options.apiUrl, "volunteers" ]
-                        [ Url.string "builderAssistantId" options.builderAssistantId
-                        ]
+                    Url.relative [ options.apiUrl, "volunteers", options.builderAssistantId ] []
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken
                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken

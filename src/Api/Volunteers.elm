@@ -3,8 +3,7 @@ module Api.Volunteers exposing (VolunteerDetail, delete, errorToString, get, get
 import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
-import Json.Decode.Extra as Decode
-import List.Extra as List
+import Json.Decode.Pipeline as Decode
 import Maybe.Extra as Maybe
 import Regex exposing (Regex)
 import Shared.Json
@@ -15,15 +14,13 @@ import Url.Builder as Url
 
 decoder : Decode.Decoder Volunteers
 decoder =
-    Decode.succeed Volunteers
-        |> Decode.andMap
-            (Decode.at [ "data", "numElements" ] Decode.int)
-        |> Decode.andMap
-            (Decode.at [ "data", "totalPages" ] Decode.int)
-        |> Decode.andMap
-            (Decode.at [ "data", "elementsThisPage" ] Decode.int)
-        |> Decode.andMap
-            (Decode.at [ "data", "elements" ] (Decode.list volunteerDecoder))
+    Decode.field "data" <|
+        (Decode.succeed Volunteers
+            |> Decode.required "numElements" Decode.int
+            |> Decode.required "totalPages" Decode.int
+            |> Decode.required "elementsThisPage" Decode.int
+            |> Decode.required "elements" (Decode.list volunteerDecoder)
+        )
 
 
 messageDecoder : Decode.Decoder String
@@ -35,9 +32,9 @@ errorDecoder : Decode.Decoder Error
 errorDecoder =
     Decode.field "data"
         (Decode.succeed Error
-            |> Decode.andMap (Decode.field "message" Decode.string)
-            |> Decode.andMap (Decode.field "status" Decode.int)
-            |> Decode.andMap (Decode.field "httpStatus" Decode.string)
+            |> Decode.required "message" Decode.string
+            |> Decode.required "status" Decode.int
+            |> Decode.required "httpStatus" Decode.string
         )
 
 
@@ -51,11 +48,11 @@ type alias Error =
 volunteerDecoder : Decode.Decoder Volunteer
 volunteerDecoder =
     Decode.succeed Volunteer
-        |> Decode.andMap (Decode.field "id" Decode.int)
-        |> Decode.andMap (Decode.field "name" Decode.string)
-        |> Decode.andMap (Decode.field "lastName" Decode.string)
-        |> Decode.andMap (Decode.field "builderAssistantId" Decode.string)
-        |> Decode.andMap (Decode.field "isActive" Decode.bool)
+        |> Decode.required "id" Decode.int
+        |> Decode.required "name" Decode.string
+        |> Decode.required "lastName" Decode.string
+        |> Decode.required "builderAssistantId" Decode.string
+        |> Decode.required "isActive" Decode.bool
 
 
 get :
@@ -166,7 +163,7 @@ type alias VolunteerDetail =
     , lastName : String
     , builderAssistantId : String
     , isActive : Bool
-    , absences : Maybe (List Absence)
+    , absences : List Absence
     , availability : List Time.Weekday
     }
 
@@ -205,13 +202,13 @@ volunteerDetailDecoder : Decode.Decoder VolunteerDetail
 volunteerDetailDecoder =
     Decode.field "data"
         (Decode.succeed VolunteerDetail
-            |> Decode.andMap (Decode.field "id" Decode.int)
-            |> Decode.andMap (Decode.field "name" Decode.string)
-            |> Decode.andMap (Decode.field "lastName" Decode.string)
-            |> Decode.andMap (Decode.field "builderAssistantId" Decode.string)
-            |> Decode.andMap (Decode.field "isActive" Decode.bool)
-            |> Decode.andMap (Decode.optionalField "absences" <| Decode.list Shared.Json.decodeAbsence)
-            |> Decode.andMap (Decode.field "availability" <| Decode.list Shared.Json.decodeAvailability)
+            |> Decode.required "id" Decode.int
+            |> Decode.required "name" Decode.string
+            |> Decode.required "lastName" Decode.string
+            |> Decode.required "builderAssistantId" Decode.string
+            |> Decode.required "isActive" Decode.bool
+            |> Decode.optional "absences" (Decode.list Shared.Json.decodeAbsence) []
+            |> Decode.required "availability" (Decode.list Shared.Json.decodeAvailability)
         )
 
 

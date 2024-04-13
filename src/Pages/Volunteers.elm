@@ -88,7 +88,6 @@ init user shared () =
 type Msg
     = PageChanged Int
     | OnClickOutside
-    | EditVolunteer
     | ToastMsg Toast.Msg
     | AddToast String To.ToastType
     | FilterStringChanged String
@@ -110,11 +109,6 @@ update user shared msg model =
             in
             ( { model | tray = newTray }
             , Effect.sendCmd <| Cmd.map ToastMsg newTmesg
-            )
-
-        EditVolunteer ->
-            ( model
-            , Effect.sendMsg <| AddToast "Not implemented yet!" To.Warning
             )
 
         AddToast message type_ ->
@@ -299,10 +293,7 @@ viewVolunteer model user volunteer =
                                 ]
                             , Html.li []
                                 [ Html.a
-                                    [ Attr.href "#"
-
-                                    -- FIXME: pass somehow query parameter here!
-                                    , Events.onClick EditVolunteer
+                                    [ Attr.href <| "/volunteers/" ++ volunteer.builderAssistantId ++ "?edit=true"
                                     , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                                     ]
                                     [ Html.text "Edit" ]

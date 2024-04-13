@@ -4,6 +4,7 @@ import Api.Volunteers
 import Auth
 import Components.Button as Button
 import Components.Spinner as Spinner
+import Dict
 import Effect exposing (Effect)
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -25,9 +26,9 @@ import View exposing (View)
 
 
 page : Auth.User -> Shared.Model -> Route { builderAssistantId : String } -> Page Model Msg
-page user shared params =
+page user shared route =
     Page.new
-        { init = init user shared params.params
+        { init = init user shared route
         , update = update user shared
         , subscriptions = subscriptions
         , view = view
@@ -57,14 +58,19 @@ type alias Model =
     }
 
 
-init : Auth.User -> Shared.Model -> { builderAssistantId : String } -> () -> ( Model, Effect Msg )
-init user shared { builderAssistantId } _ =
-    ( Model Loading False
+init : Auth.User -> Shared.Model -> Route { builderAssistantId : String } -> () -> ( Model, Effect Msg )
+init user shared route _ =
+    let
+        editMode : Bool
+        editMode =
+            Dict.get "edit" route.query == Just "true"
+    in
+    ( Model Loading editMode
     , Api.Volunteers.getDetail
         { onResponse = VolunteerDetailsApiResponded
         , tokens = user.tokens
         , apiUrl = shared.apiUrl
-        , builderAssistantId = builderAssistantId
+        , builderAssistantId = route.params.builderAssistantId
         }
     )
 
@@ -79,6 +85,7 @@ type Msg
     | ToggleAvailableDay Time.Weekday
     | SaveChanges Shared.Model.VolunteerDetail
     | EditVolunteerApiResponse (Result Http.Error String)
+    | CancelEditMode String
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -93,6 +100,13 @@ update user shared msg model =
             -- TODO: add snackbar to show success message
             ( { model | editMode = False }
             , Effect.none
+            )
+
+        CancelEditMode builderAssistantId ->
+            ( { model | editMode = False }
+            , Effect.pushPath <|
+                Route.Path.Volunteers_BuilderAssistantId_
+                    { builderAssistantId = builderAssistantId }
             )
 
         EditVolunteerApiResponse (Err httpError) ->
@@ -247,13 +261,20 @@ view model =
                         ]
                     ]
                 , Html.viewIf model.editMode <|
-                    Button.primary
-                        { content = Html.text "Save changes"
-                        , onClick =
-                            RemoteData.toMaybe model.volunteer
-                                |> Maybe.map SaveChanges
-                        , disabled = False
-                        , attrs = [ Attr.class "w-fit" ]
-                        }
+                    Html.div [ Attr.class "flex align-center justify-center gap-2" ]
+                        [ Button.primary
+                            { content = Html.text "Save changes"
+                            , onClick =
+                                RemoteData.toMaybe model.volunteer
+                                    |> Maybe.map SaveChanges
+                            , disabled = False
+                            , attrs = [ Attr.class "w-fit" ]
+                            }
+                        , Button.secondary
+                            { content = "Cancel"
+                            , onClick = CancelEditMode builderAssistantId
+                            , attrs = [ Attr.class "w-48" ]
+                            }
+                        ]
                 ]
     }

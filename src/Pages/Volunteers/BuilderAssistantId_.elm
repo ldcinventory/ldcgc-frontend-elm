@@ -15,6 +15,7 @@ import Layouts
 import Page exposing (Page)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
+import Route.Path
 import Set.Any as Set
 import Shared
 import Shared.Json exposing (encodeVolunteerDetail)
@@ -27,7 +28,7 @@ page : Auth.User -> Shared.Model -> Route { builderAssistantId : String } -> Pag
 page user shared params =
     Page.new
         { init = init user shared params.params
-        , update = update
+        , update = update user shared
         , subscriptions = subscriptions
         , view = view
         }
@@ -77,15 +78,25 @@ type Msg
     | EditParameterChanged { from : Maybe String, to : Maybe String }
     | ToggleAvailableDay Time.Weekday
     | SaveChanges Shared.Model.VolunteerDetail
+    | EditVolunteerApiResponse (Result Http.Error String)
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
+update user shared msg model =
     case msg of
         VolunteerDetailsApiResponded response ->
             ( { model | volunteer = RemoteData.fromResult response }
             , Effect.none
             )
+
+        EditVolunteerApiResponse (Ok message) ->
+            -- TODO: add snackbar to show success message
+            ( { model | editMode = False }
+            , Effect.none
+            )
+
+        EditVolunteerApiResponse (Err httpError) ->
+            ( { model | volunteer = Failure httpError }, Effect.none )
 
         EditParameterChanged query ->
             case query.to of
@@ -110,11 +121,20 @@ update msg model =
             )
 
         SaveChanges details ->
-            let
-                _ =
-                    Debug.log "details" encodeVolunteerDetail details
-            in
-            ( model, Effect.none )
+            ( model
+            , Effect.batch
+                [ Api.Volunteers.put
+                    { onResponse = EditVolunteerApiResponse
+                    , tokens = user.tokens
+                    , apiUrl = shared.apiUrl
+                    , jsonBody = encodeVolunteerDetail details
+                    , builderAssistantId = details.builderAssistantId
+                    }
+                , Effect.pushPath <|
+                    Route.Path.Volunteers_BuilderAssistantId_
+                        { builderAssistantId = details.builderAssistantId }
+                ]
+            )
 
 
 

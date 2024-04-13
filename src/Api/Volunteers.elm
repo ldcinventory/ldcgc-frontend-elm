@@ -3,6 +3,7 @@ module Api.Volunteers exposing
     , errorToString
     , get
     , getDetail
+    , put
     , toEnglishWeekday
     )
 
@@ -10,6 +11,7 @@ import Effect exposing (Effect)
 import Http exposing (Error(..))
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
+import Json.Encode as Encode
 import Maybe.Extra as Maybe
 import Regex exposing (Regex)
 import Set.Any as Set
@@ -185,6 +187,34 @@ getDetail options =
                     ]
                 , body = Http.emptyBody
                 , expect = Http.expectJson options.onResponse volunteerDetailDecoder
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+    in
+    Effect.sendCmd cmd
+
+
+put :
+    { onResponse : Result Http.Error String -> msg
+    , tokens : Shared.Model.Tokens
+    , apiUrl : String
+    , jsonBody : Encode.Value
+    , builderAssistantId : String
+    }
+    -> Effect msg
+put { onResponse, tokens, apiUrl, builderAssistantId, jsonBody } =
+    let
+        cmd : Cmd msg
+        cmd =
+            Http.request
+                { method = "PUT"
+                , url = Url.relative [ apiUrl, "volunteers", builderAssistantId ] []
+                , headers =
+                    [ Http.header "x-signature-token" tokens.signatureToken
+                    , Http.header "x-header-payload-token" tokens.headerPayloadToken
+                    ]
+                , body = Http.jsonBody jsonBody
+                , expect = Http.expectStringResponse onResponse handleHttpResponse
                 , timeout = Nothing
                 , tracker = Nothing
                 }

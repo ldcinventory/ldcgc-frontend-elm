@@ -66,14 +66,8 @@ type Msg
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        VolunteerDetailsApiResponded (Err httpError) ->
-            -- TODO: improve the way we deal with errors (maybe move notification stuck to Sidebar layout?)
-            ( { model | volunteer = Failure httpError }
-            , Effect.none
-            )
-
-        VolunteerDetailsApiResponded (Ok volunteer) ->
-            ( { model | volunteer = Success volunteer }
+        VolunteerDetailsApiResponded response ->
+            ( { model | volunteer = RemoteData.fromResult response }
             , Effect.none
             )
 
@@ -130,6 +124,8 @@ view model =
                             ]
                         , Html.div [ Attr.class "flex flex-col gap-2 justify-center align-middle" ]
                             [ Html.text "Volunteer barcode"
+                            , Html.span [ Attr.class "text-xl font-mono tracking-widest" ]
+                                [ Html.text builderAssistantId ]
                             , Html.strong
                                 [ Attr.class "text-4xl font-barcode w-fit tracking-widest" ]
                                 [ Html.text builderAssistantId ]

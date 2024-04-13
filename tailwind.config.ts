@@ -25,6 +25,7 @@ export default {
     },
     fontFamily: {
       barcode: ["'Libre Barcode 128'"],
+      mono: ["monospace"],
     },
   },
   plugins: [],

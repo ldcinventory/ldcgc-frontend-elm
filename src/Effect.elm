@@ -6,6 +6,7 @@ port module Effect exposing
     , signIn, signOut
     , map, toCmd
     , saveUser, clearUser
+    , pushPath, replacePath
     )
 
 {-|
@@ -17,6 +18,7 @@ port module Effect exposing
 @docs signIn, signOut
 @docs map, toCmd
 @docs saveUser, clearUser
+@docs pushPath, replacePath
 
 -}
 

@@ -1,5 +1,9 @@
 module Shared.Model exposing (..)
 
+import Set.Any exposing (AnySet)
+import Time exposing (Weekday)
+
+
 {-| Normally, this value would live in "Shared.elm"
 but that would lead to a circular dependency import cycle.
 
@@ -7,8 +11,6 @@ For that reason, both `Shared.Model` and `Shared.Msg` are in their
 own file, so they can be imported by `Effect.elm`
 
 -}
-
-
 type alias Model =
     { user : Maybe User
     , apiUrl : String
@@ -55,4 +57,23 @@ type alias Volunteer =
     , lastName : String
     , builderAssistantId : String
     , isActive : Bool
+    }
+
+
+type alias Absence =
+    { id : Int
+    , dateFrom : String
+    , dateTo : String
+    , builderAssistantId : String
+    }
+
+
+type alias VolunteerDetail =
+    { id : Int
+    , name : String
+    , lastName : String
+    , builderAssistantId : String
+    , isActive : Bool
+    , absences : List Absence
+    , availability : AnySet String Weekday
     }

@@ -21,6 +21,7 @@ import Page exposing (Page)
 import Process
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
+import Route.Path
 import Shared
 import Shared.Model exposing (Role(..), Volunteer, Volunteers)
 import Task
@@ -87,7 +88,6 @@ init user shared () =
 type Msg
     = PageChanged Int
     | OnClickOutside
-    | EditVolunteer
     | ToastMsg Toast.Msg
     | AddToast String To.ToastType
     | FilterStringChanged String
@@ -109,11 +109,6 @@ update user shared msg model =
             in
             ( { model | tray = newTray }
             , Effect.sendCmd <| Cmd.map ToastMsg newTmesg
-            )
-
-        EditVolunteer ->
-            ( model
-            , Effect.sendMsg <| AddToast "Not implemented yet!" To.Warning
             )
 
         AddToast message type_ ->
@@ -282,8 +277,39 @@ viewVolunteer model user volunteer =
                 Dropdown.view
                     { open = model.openMenuOption == Just volunteer.id
                     , toggle = MenuOptionToggle volunteer.id
-                    , onDelete = RequestDeleteVolunteer <| Just volunteer
-                    , onWarning = EditVolunteer
+                    , options =
+                        [ Html.ul
+                            [ Attr.class "py-1 text-sm text-gray-700 dark:text-gray-200"
+                            , Attr.attribute "aria-labelledby" "edit-dropdown-button"
+                            ]
+                            [ Html.li []
+                                [ Html.a
+                                    [ Route.Path.href <|
+                                        Route.Path.Volunteers_BuilderAssistantId_
+                                            { builderAssistantId = volunteer.builderAssistantId }
+                                    , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    ]
+                                    [ Html.text "Show" ]
+                                ]
+                            , Html.li []
+                                [ Html.a
+                                    [ Attr.href <| "/volunteers/" ++ volunteer.builderAssistantId ++ "?edit=true"
+                                    , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    ]
+                                    [ Html.text "Edit" ]
+                                ]
+                            ]
+                        , Html.div
+                            [ Attr.class "py-1"
+                            ]
+                            [ Html.a
+                                [ Attr.href "#"
+                                , Events.onClick <| RequestDeleteVolunteer <| Just volunteer
+                                , Attr.class "block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                ]
+                                [ Html.text "Delete" ]
+                            ]
+                        ]
                     , dropdownId = "volunteer-dropdown"
                     }
             ]

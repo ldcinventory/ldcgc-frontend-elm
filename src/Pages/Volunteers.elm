@@ -300,6 +300,8 @@ viewVolunteer model user volunteer =
                             , Html.li []
                                 [ Html.a
                                     [ Attr.href "#"
+
+                                    -- FIXME: pass somehow query parameter here!
                                     , Events.onClick EditVolunteer
                                     , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                                     ]

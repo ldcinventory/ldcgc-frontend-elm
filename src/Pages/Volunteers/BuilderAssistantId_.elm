@@ -2,17 +2,22 @@ module Pages.Volunteers.BuilderAssistantId_ exposing (Model, Msg, page)
 
 import Api.Volunteers
 import Auth
+import Components.Button as Button
 import Components.Spinner as Spinner
 import Effect exposing (Effect)
-import Html
+import Html exposing (Html)
 import Html.Attributes as Attr
+import Html.Attributes.Extra as Attr
+import Html.Events as Events
+import Html.Extra as Html
 import Http
 import Layouts
 import Page exposing (Page)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
+import Set.Any as Set
 import Shared
-import Time
+import Time exposing (Weekday(..))
 import View exposing (View)
 
 
@@ -24,6 +29,10 @@ page user shared params =
         , subscriptions = subscriptions
         , view = view
         }
+        |> Page.withOnQueryParameterChanged
+            { key = "edit"
+            , onChange = EditParameterChanged
+            }
         |> Page.withLayout (toLayout user)
 
 
@@ -40,12 +49,14 @@ toLayout user _ =
 
 
 type alias Model =
-    { volunteer : WebData Api.Volunteers.VolunteerDetail }
+    { volunteer : WebData Api.Volunteers.VolunteerDetail
+    , editMode : Bool
+    }
 
 
 init : Auth.User -> Shared.Model -> { builderAssistantId : String } -> () -> ( Model, Effect Msg )
 init user shared { builderAssistantId } _ =
-    ( Model Loading
+    ( Model Loading False
     , Api.Volunteers.getDetail
         { onResponse = VolunteerDetailsApiResponded
         , tokens = user.tokens
@@ -61,6 +72,8 @@ init user shared { builderAssistantId } _ =
 
 type Msg
     = VolunteerDetailsApiResponded (Result Http.Error Api.Volunteers.VolunteerDetail)
+    | EditParameterChanged { from : Maybe String, to : Maybe String }
+    | ToggleAvailableDay Time.Weekday
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -68,6 +81,28 @@ update msg model =
     case msg of
         VolunteerDetailsApiResponded response ->
             ( { model | volunteer = RemoteData.fromResult response }
+            , Effect.none
+            )
+
+        EditParameterChanged query ->
+            case query.to of
+                Just "true" ->
+                    ( { model | editMode = True }
+                    , Effect.none
+                    )
+
+                _ ->
+                    ( { model | editMode = False }
+                    , Effect.none
+                    )
+
+        ToggleAvailableDay day ->
+            ( { model
+                | volunteer =
+                    RemoteData.map
+                        (\detail -> { detail | availability = Set.toggle day detail.availability })
+                        model.volunteer
+              }
             , Effect.none
             )
 
@@ -85,6 +120,31 @@ subscriptions _ =
 -- VIEW
 -- TODO: fix availability on mobile
 -- TODO: add list of absences (CRUD)
+
+
+viewWeekDay : Set.AnySet String Time.Weekday -> Bool -> Time.Weekday -> Html Msg
+viewWeekDay availability editMode day =
+    Html.div
+        [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 justify-center w-16"
+        , Attr.classList
+            [ ( "bg-blue-600", Set.member day availability )
+            , ( "cursor-pointer", editMode )
+            ]
+        , Attr.attributeIf editMode <| Events.onClick <| ToggleAvailableDay day
+        ]
+        [ Html.div
+            [ Attr.class "flex items-center px-4 py-4"
+            ]
+            [ Html.div
+                [ Attr.class "text-center"
+                ]
+                [ Html.p
+                    [ Attr.class "text-gray-100 text-sm"
+                    ]
+                    [ Html.text <| Api.Volunteers.toEnglishWeekday day ]
+                ]
+            ]
+        ]
 
 
 view : Model -> View Msg
@@ -109,7 +169,13 @@ view model =
             Success { name, lastName, availability, builderAssistantId } ->
                 [ Html.div
                     [ Attr.class "p-3 flex flex-col gap-4 items-start" ]
-                    [ Html.h2
+                    [ Html.viewIf (not model.editMode) <|
+                        Html.a
+                            [ Attr.href "?edit=true"
+                            , Attr.class "text-blue-500 hover:text-blue-700"
+                            ]
+                            [ Html.text "Edit" ]
+                    , Html.h2
                         [ Attr.class "text-4xl font-extrabold dark:text-white"
                         ]
                         [ Html.text <| name ++ " " ++ lastName ]
@@ -144,128 +210,18 @@ view model =
                             , Html.div
                                 [ Attr.class "flex bg-gray-800 shadow-md justify-start md:justify-center rounded-lg mx-auto py-4 px-2"
                                 ]
-                                [ Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Mon availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
-                                                ]
-                                                [ Html.text "Mon" ]
-                                            ]
-                                        ]
-                                    ]
-                                , Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Tue availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
-                                                ]
-                                                [ Html.text "Tue" ]
-                                            ]
-                                        ]
-                                    ]
-                                , Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Wed availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 text-sm"
-                                                ]
-                                                [ Html.text "Wed" ]
-                                            ]
-                                        ]
-                                    ]
-                                , Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all\tduration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Thu availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
-                                                ]
-                                                [ Html.text "Thu" ]
-                                            ]
-                                        ]
-                                    ]
-                                , Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all\tduration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Fri availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
-                                                ]
-                                                [ Html.text "Fri" ]
-                                            ]
-                                        ]
-                                    ]
-                                , Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all\tduration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Sat availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
-                                                ]
-                                                [ Html.text "Sat" ]
-                                            ]
-                                        ]
-                                    ]
-                                , Html.div
-                                    [ Attr.class "flex group hover:bg-blue-500 hover:bg-opacity-75 hover:shadow-lg rounded-lg mx-1 transition-all duration-150 cursor-pointer justify-center w-16"
-                                    , Attr.classList [ ( "bg-blue-600", List.member Time.Sun availability ) ]
-                                    ]
-                                    [ Html.div
-                                        [ Attr.class "flex items-center px-4 py-4"
-                                        ]
-                                        [ Html.div
-                                            [ Attr.class "text-center"
-                                            ]
-                                            [ Html.p
-                                                [ Attr.class "text-gray-100 group-hover:text-gray-100 text-sm transition-all duration-150"
-                                                ]
-                                                [ Html.text "Sun" ]
-                                            ]
-                                        ]
-                                    ]
-                                ]
+                                ([ Mon, Tue, Wed, Thu, Fri, Sat, Sun ]
+                                    |> List.map (viewWeekDay availability model.editMode)
+                                )
                             ]
                         ]
                     ]
+                , Html.viewIf model.editMode <|
+                    Button.primary
+                        { content = Html.text "Save changes"
+                        , onClick = Nothing
+                        , disabled = False
+                        , attrs = [ Attr.class "w-fit" ]
+                        }
                 ]
     }

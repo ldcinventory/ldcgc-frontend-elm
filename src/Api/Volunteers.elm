@@ -1,4 +1,11 @@
-module Api.Volunteers exposing (VolunteerDetail, delete, errorToString, get, getDetail)
+module Api.Volunteers exposing
+    ( VolunteerDetail
+    , delete
+    , errorToString
+    , get
+    , getDetail
+    , toEnglishWeekday
+    )
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
@@ -6,9 +13,10 @@ import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
 import Maybe.Extra as Maybe
 import Regex exposing (Regex)
+import Set.Any as Set
 import Shared.Json
 import Shared.Model exposing (Absence, Volunteer, Volunteers)
-import Time
+import Time exposing (Weekday(..))
 import Url.Builder as Url
 
 
@@ -164,7 +172,7 @@ type alias VolunteerDetail =
     , builderAssistantId : String
     , isActive : Bool
     , absences : List Absence
-    , availability : List Time.Weekday
+    , availability : Set.AnySet String Time.Weekday
     }
 
 
@@ -196,6 +204,31 @@ getDetail options =
     Effect.sendCmd cmd
 
 
+toEnglishWeekday : Weekday -> String
+toEnglishWeekday weekday =
+    case weekday of
+        Mon ->
+            "Mon"
+
+        Tue ->
+            "Tue"
+
+        Wed ->
+            "Wed"
+
+        Thu ->
+            "Thu"
+
+        Fri ->
+            "Fri"
+
+        Sat ->
+            "Sat"
+
+        Sun ->
+            "Sun"
+
+
 volunteerDetailDecoder : Decode.Decoder VolunteerDetail
 volunteerDetailDecoder =
     Decode.field "data"
@@ -206,7 +239,7 @@ volunteerDetailDecoder =
             |> Decode.required "builderAssistantId" Decode.string
             |> Decode.required "isActive" Decode.bool
             |> Decode.optional "absences" (Decode.list Shared.Json.decodeAbsence) []
-            |> Decode.required "availability" (Decode.list Shared.Json.decodeAvailability)
+            |> Decode.required "availability" (Set.decode toEnglishWeekday Shared.Json.decodeAvailability)
         )
 
 

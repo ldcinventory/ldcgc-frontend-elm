@@ -1,6 +1,5 @@
 module Api.Volunteers exposing
-    ( VolunteerDetail
-    , delete
+    ( delete
     , errorToString
     , get
     , getDetail
@@ -15,7 +14,7 @@ import Maybe.Extra as Maybe
 import Regex exposing (Regex)
 import Set.Any as Set
 import Shared.Json
-import Shared.Model exposing (Absence, Volunteer, Volunteers)
+import Shared.Model exposing (Absence, Volunteer, VolunteerDetail, Volunteers)
 import Time exposing (Weekday(..))
 import Url.Builder as Url
 
@@ -163,17 +162,6 @@ handleHttpResponse response =
 
 
 -- Volunteer Detail
-
-
-type alias VolunteerDetail =
-    { id : Int
-    , name : String
-    , lastName : String
-    , builderAssistantId : String
-    , isActive : Bool
-    , absences : List Absence
-    , availability : Set.AnySet String Time.Weekday
-    }
 
 
 getDetail :

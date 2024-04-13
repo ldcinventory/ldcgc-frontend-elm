@@ -17,6 +17,8 @@ import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Set.Any as Set
 import Shared
+import Shared.Json exposing (encodeVolunteerDetail)
+import Shared.Model
 import Time exposing (Weekday(..))
 import View exposing (View)
 
@@ -49,7 +51,7 @@ toLayout user _ =
 
 
 type alias Model =
-    { volunteer : WebData Api.Volunteers.VolunteerDetail
+    { volunteer : WebData Shared.Model.VolunteerDetail
     , editMode : Bool
     }
 
@@ -71,9 +73,10 @@ init user shared { builderAssistantId } _ =
 
 
 type Msg
-    = VolunteerDetailsApiResponded (Result Http.Error Api.Volunteers.VolunteerDetail)
+    = VolunteerDetailsApiResponded (Result Http.Error Shared.Model.VolunteerDetail)
     | EditParameterChanged { from : Maybe String, to : Maybe String }
     | ToggleAvailableDay Time.Weekday
+    | SaveChanges Shared.Model.VolunteerDetail
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -105,6 +108,13 @@ update msg model =
               }
             , Effect.none
             )
+
+        SaveChanges details ->
+            let
+                _ =
+                    Debug.log "details" encodeVolunteerDetail details
+            in
+            ( model, Effect.none )
 
 
 
@@ -219,7 +229,9 @@ view model =
                 , Html.viewIf model.editMode <|
                     Button.primary
                         { content = Html.text "Save changes"
-                        , onClick = Nothing
+                        , onClick =
+                            RemoteData.toMaybe model.volunteer
+                                |> Maybe.map SaveChanges
                         , disabled = False
                         , attrs = [ Attr.class "w-fit" ]
                         }

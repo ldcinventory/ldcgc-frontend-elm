@@ -4,6 +4,7 @@ module Shared.Json exposing
     , decodeRole
     , decodeUser
     , encodeUser
+    , encodeVolunteerDetail
     )
 
 import Json.Decode as Decode exposing (Decoder)
@@ -11,8 +12,9 @@ import Json.Decode.Extra as Decode
 import Json.Decode.Pipeline as Decode
 import Json.Encode as Encode exposing (Value)
 import Json.Encode.Extra as Encode
+import Set.Any as Set
 import Shared.Model exposing (Role(..), User)
-import Time
+import Time exposing (Weekday(..))
 
 
 encodeRole : Role -> Value
@@ -94,6 +96,31 @@ decodeAbsence =
         |> Decode.required "builderAssistantId" Decode.string
 
 
+encodeWeekday : Weekday -> Encode.Value
+encodeWeekday weekday =
+    case weekday of
+        Mon ->
+            Encode.string "MONDAY"
+
+        Tue ->
+            Encode.string "TUESDAY"
+
+        Wed ->
+            Encode.string "WEDNESDAY"
+
+        Thu ->
+            Encode.string "THURSDAY"
+
+        Fri ->
+            Encode.string "FRIDAY"
+
+        Sat ->
+            Encode.string "SATURDAY"
+
+        Sun ->
+            Encode.string "SUNDAY"
+
+
 decodeAvailability : Decoder Time.Weekday
 decodeAvailability =
     Decode.string
@@ -124,3 +151,16 @@ decodeAvailability =
                     str ->
                         Decode.fail <| "Invalid availability found: " ++ str
             )
+
+
+encodeVolunteerDetail : Shared.Model.VolunteerDetail -> Encode.Value
+encodeVolunteerDetail volunteerDetails =
+    Encode.object
+        [ ( "id", Encode.int volunteerDetails.id )
+        , ( "name", Encode.string volunteerDetails.name )
+        , ( "lastName", Encode.string volunteerDetails.lastName )
+        , ( "builderAssistantId", Encode.string volunteerDetails.builderAssistantId )
+        , ( "isActive", Encode.bool volunteerDetails.isActive )
+        , ( "absences", Encode.list Encode.string [] )
+        , ( "availability", Set.encode encodeWeekday volunteerDetails.availability )
+        ]

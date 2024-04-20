@@ -4,6 +4,7 @@ import Api.Volunteers
 import Auth
 import Components.Button as Button
 import Components.Spinner as Spinner
+import Components.Toast as Toast
 import Dict
 import Effect exposing (Effect)
 import Html exposing (Html)
@@ -97,9 +98,8 @@ update user shared msg model =
             )
 
         EditVolunteerApiResponse (Ok message) ->
-            -- TODO: add snackbar to show success message
             ( { model | editMode = False }
-            , Effect.none
+            , Effect.sendToast message Toast.Success
             )
 
         CancelEditMode builderAssistantId ->

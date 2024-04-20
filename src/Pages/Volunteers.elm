@@ -8,7 +8,7 @@ import Components.Dropdown as Dropdown
 import Components.Icons as Icon
 import Components.Pagination as Pagination
 import Components.Spinner as Spinner
-import Components.Toast as To
+import Components.Toast as Toast
 import Effect exposing (Effect)
 import Html exposing (Html)
 import Html.Attributes as Attr
@@ -25,7 +25,6 @@ import Route.Path
 import Shared
 import Shared.Model exposing (Role(..), Volunteer, Volunteers)
 import Task
-import Toast
 import View exposing (View)
 
 
@@ -58,7 +57,6 @@ type alias Model =
     , filterString : String
     , openMenuOption : Maybe Int
     , deleteVolunteerModal : Maybe Volunteer
-    , tray : Toast.Tray To.Toast
     }
 
 
@@ -69,7 +67,6 @@ init user shared () =
       , filterString = ""
       , openMenuOption = Nothing
       , deleteVolunteerModal = Nothing
-      , tray = Toast.tray
       }
     , Api.Volunteers.get
         { onResponse = VolunteersApiResponded
@@ -88,8 +85,6 @@ init user shared () =
 type Msg
     = PageChanged Int
     | OnClickOutside
-    | ToastMsg Toast.Msg
-    | AddToast String To.ToastType
     | FilterStringChanged String
     | DelayedFilterStringChanged String
     | MenuOptionToggle Int
@@ -102,33 +97,9 @@ type Msg
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update user shared msg model =
     case msg of
-        ToastMsg toastMsg ->
-            let
-                ( newTray, newTmesg ) =
-                    Toast.update toastMsg model.tray
-            in
-            ( { model | tray = newTray }
-            , Effect.sendCmd <| Cmd.map ToastMsg newTmesg
-            )
-
-        AddToast message type_ ->
-            let
-                ( newTray, tmesg ) =
-                    Toast.add model.tray <|
-                        Toast.expireIn 5000 { message = message, toastType = type_ }
-            in
-            ( { model | tray = newTray }
-            , Effect.sendCmd <| Cmd.map ToastMsg tmesg
-            )
-
         VolunteersApiResponded (Err httpError) ->
             ( { model | volunteers = Failure httpError }
-            , Effect.sendMsg <|
-                AddToast
-                    ("The volunteers API responded with an error: "
-                        ++ Api.Volunteers.errorToString httpError
-                    )
-                    To.Danger
+            , Effect.sendToast ("The volunteers API responded with an error: " ++ Api.Volunteers.errorToString httpError) Toast.Danger
             )
 
         VolunteersApiResponded (Ok volunteers) ->
@@ -177,12 +148,12 @@ update user shared msg model =
                         (\volunteers -> { volunteers | list = List.remove volunteer volunteers.list })
                         model.volunteers
               }
-            , Effect.sendMsg <| AddToast "Volunteer deleted correctly." To.Success
+            , Effect.sendToast "Volunteer deleted correctly." Toast.Success
             )
 
         DeleteVolunteerResponse _ (Err _) ->
             ( model
-            , Effect.sendMsg <| AddToast "Something wrong happened while deleting the volunteer." To.Danger
+            , Effect.sendToast "Something wrong happened while deleting the volunteer." Toast.Danger
             )
 
         FilterStringChanged filterString ->
@@ -383,16 +354,6 @@ viewDeleteModal volunteer =
         ]
 
 
-viewNotification : Model -> Html Msg
-viewNotification model =
-    Html.div [ Attr.class "absolute z-40 p-4 sm:ml-64 h-full" ]
-        [ Toast.render
-            (To.view (ToastMsg << Toast.remove << .id))
-            model.tray
-            (Toast.config ToastMsg)
-        ]
-
-
 view : Auth.User -> Model -> View Msg
 view user model =
     { title = "Volunteers"
@@ -406,12 +367,13 @@ view user model =
                 [ Spinner.view [ Attr.class "h-full w-full" ]
                 ]
 
-            Failure _ ->
-                [ viewNotification model ]
+            Failure httpError ->
+                [ Html.div [ Attr.class "text-red-500" ]
+                    [ Html.text <| "Error: " ++ Api.Volunteers.errorToString httpError ]
+                ]
 
             Success volunteers ->
-                [ viewNotification model
-                , Html.section
+                [ Html.section
                     [ Attr.class "bg-gray-50 dark:bg-gray-900 p-0 sd:p-3 sm:p-5"
                     ]
                     [ Html.viewMaybe viewDeleteModal model.deleteVolunteerModal

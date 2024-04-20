@@ -1,7 +1,9 @@
 module Shared.Model exposing (..)
 
+import Components.Toast as To
 import Set.Any exposing (AnySet)
 import Time exposing (Weekday)
+import Toast
 
 
 {-| Normally, this value would live in "Shared.elm"
@@ -14,6 +16,7 @@ own file, so they can be imported by `Effect.elm`
 type alias Model =
     { user : Maybe User
     , apiUrl : String
+    , tray : Toast.Tray To.Toast
     }
 
 

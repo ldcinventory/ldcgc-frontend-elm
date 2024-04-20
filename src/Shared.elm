@@ -21,6 +21,7 @@ import Route.Path
 import Shared.Json exposing (decodeUser)
 import Shared.Model
 import Shared.Msg
+import Toast
 
 
 
@@ -56,7 +57,10 @@ init flagsResult _ =
             flagsResult
                 |> Result.withDefault { user = Nothing, apiUrl = "" }
     in
-    ( { user = flags.user, apiUrl = flags.apiUrl }
+    ( { user = flags.user
+      , apiUrl = flags.apiUrl
+      , tray = Toast.tray
+      }
     , Effect.none
     )
 
@@ -106,6 +110,25 @@ update route msg model =
         Shared.Msg.SignOut ->
             ( { model | user = Nothing }
             , Effect.clearUser
+            )
+
+        Shared.Msg.ToastMsg toastMsg ->
+            let
+                ( newTray, newTmesg ) =
+                    Toast.update toastMsg model.tray
+            in
+            ( { model | tray = newTray }
+            , Effect.sendCmd <| Cmd.map Shared.Msg.ToastMsg newTmesg
+            )
+
+        Shared.Msg.AddToast message type_ ->
+            let
+                ( newTray, tmesg ) =
+                    Toast.add model.tray <|
+                        Toast.expireIn 5000 { message = message, toastType = type_ }
+            in
+            ( { model | tray = newTray }
+            , Effect.sendCmd <| Cmd.map Shared.Msg.ToastMsg tmesg
             )
 
 

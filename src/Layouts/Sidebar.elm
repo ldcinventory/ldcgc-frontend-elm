@@ -5,6 +5,7 @@ import Auth
 import Browser.Events
 import Components.Dropdown as Dropdown
 import Components.Icons as Icon
+import Components.Toast as To
 import Effect exposing (Effect)
 import Html exposing (Html, a, aside, button, div, li, span, text, ul)
 import Html.Attributes as Attr
@@ -16,6 +17,7 @@ import Layout exposing (Layout)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Toast
 import View exposing (View)
 
 
@@ -30,7 +32,7 @@ layout props shared route =
     Layout.new
         { init = init
         , update = update props shared
-        , view = view props route
+        , view = view props shared route
         , subscriptions = subscriptions
         }
 
@@ -60,6 +62,7 @@ init _ =
 
 type Msg
     = UserClickedSignOut
+    | UpdateToastMsg Toast.Msg
     | OpenSidebar
     | OnClickOutside
     | SignOutApiResponded (Result Http.Error Api.SignOut.Data)
@@ -97,6 +100,9 @@ update props shared msg model =
             , Effect.none
             )
 
+        UpdateToastMsg toastMsg ->
+            ( model, Effect.sendToastMsg toastMsg )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions { isSidebarOpen } =
@@ -111,8 +117,19 @@ subscriptions { isSidebarOpen } =
 -- VIEW
 
 
+viewNotification : Shared.Model -> Html Msg
+viewNotification model =
+    Html.div [ Attr.class "absolute z-40 p-4 sm:ml-64 h-full" ]
+        [ Toast.render
+            (To.view (UpdateToastMsg << Toast.remove << .id))
+            model.tray
+            (Toast.config UpdateToastMsg)
+        ]
+
+
 view :
     Props
+    -> Shared.Model
     -> Route ()
     ->
         { toContentMsg : Msg -> contentMsg
@@ -120,7 +137,7 @@ view :
         , model : Model
         }
     -> View contentMsg
-view props _ { toContentMsg, content, model } =
+view props shared _ { toContentMsg, content, model } =
     { title = content.title ++ " | LDC GC"
     , body =
         [ Html.div
@@ -131,6 +148,8 @@ view props _ { toContentMsg, content, model } =
                 { title = props.title
                 , content = content
                 }
+            , viewNotification shared
+                |> Html.map toContentMsg
             , Html.div [ Attr.class "text-red-500" ] <|
                 List.map
                     (Api.SignOut.errorToString >> Html.text)

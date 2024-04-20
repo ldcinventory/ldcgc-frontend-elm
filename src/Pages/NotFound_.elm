@@ -70,7 +70,7 @@ view _ =
     { title = "Page not found"
     , body =
         [ Html.section
-            [ Attr.class "bg-white dark:bg-gray-900"
+            [ Attr.class "bg-white dark:bg-gray-900 dark:text-white"
             ]
             [ Html.div
                 [ Attr.class "h-screen py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6"

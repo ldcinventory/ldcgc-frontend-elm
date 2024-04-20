@@ -34,5 +34,6 @@ about deploying your app for free using Netlify or Vercel.
 - [ ] Implement password recovery workflow
 - [ ] Only store user in localStorage if ✅ Remember me
 - [ ] Extract Components/Modal and re-use it!
+- [ ] Move notifications to Sidebar.elm
 - [ ] Implement tools page
 - [ ] Implement consumables page

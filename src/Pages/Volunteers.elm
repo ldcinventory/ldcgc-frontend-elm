@@ -244,9 +244,23 @@ delayMsg msg =
 -- VIEW
 
 
+viewEmptyVolunteers : Html Msg
+viewEmptyVolunteers =
+    Html.tr
+        [ Attr.class "border-b dark:border-gray-700"
+        ]
+        [ Html.td
+            [ Attr.class "px-4 py-3 text-center"
+            , Attr.colspan 4
+            ]
+            [ Html.text "No volunteers found" ]
+        ]
+
+
 viewVolunteer : Model -> Auth.User -> Volunteer -> Html Msg
 viewVolunteer model user volunteer =
     let
+        isAdmin : Bool
         isAdmin =
             user.role == Admin
     in
@@ -483,7 +497,12 @@ view user model =
                                             ]
                                         ]
                                     , Html.tbody [] <|
-                                        List.map (viewVolunteer model user) volunteers.list
+                                        case volunteers.list of
+                                            [] ->
+                                                [ viewEmptyVolunteers ]
+
+                                            xs ->
+                                                List.map (viewVolunteer model user) xs
                                     ]
                                 ]
                             , Pagination.view

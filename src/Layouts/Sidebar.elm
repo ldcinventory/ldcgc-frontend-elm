@@ -242,7 +242,7 @@ viewMainContent { title, content } =
         ]
         [ Html.section
             [ Attr.class "p-4 pl-14 sm:ml-0 md:ml-64" ]
-            [ Html.div
+            [ Html.h1
                 [ Attr.class "font-extrabold text-2xl" ]
                 [ Html.text title ]
             ]

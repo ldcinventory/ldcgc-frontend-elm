@@ -219,6 +219,7 @@ viewSidebar model =
                     , li []
                         [ a
                             [ Events.onClick UserClickedSignOut
+                            , Attr.href "#"
                             , Attr.class "flex cursor-pointer items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
                             [ Icon.signOut

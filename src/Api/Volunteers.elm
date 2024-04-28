@@ -255,7 +255,7 @@ volunteerDetailDecoder =
             |> Decode.required "name" Decode.string
             |> Decode.required "lastName" Decode.string
             |> Decode.required "builderAssistantId" Decode.string
-            |> Decode.required "isActive" Decode.bool
+            |> Decode.optional "isActive" (Decode.maybe Decode.bool) Nothing
             |> Decode.optional "absences" (Decode.list Shared.Json.decodeAbsence) []
             |> Decode.required "availability" (Set.decode toEnglishWeekday Shared.Json.decodeAvailability)
         )

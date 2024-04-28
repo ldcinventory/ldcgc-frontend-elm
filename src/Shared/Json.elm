@@ -160,7 +160,6 @@ encodeVolunteerDetail volunteerDetails =
         , ( "name", Encode.string volunteerDetails.name )
         , ( "lastName", Encode.string volunteerDetails.lastName )
         , ( "builderAssistantId", Encode.string volunteerDetails.builderAssistantId )
-        , ( "isActive", Encode.bool volunteerDetails.isActive )
         , ( "absences", Encode.list Encode.string [] )
         , ( "availability", Set.encode encodeWeekday volunteerDetails.availability )
         ]

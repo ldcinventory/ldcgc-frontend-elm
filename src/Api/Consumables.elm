@@ -1,4 +1,4 @@
-module Api.Consumables exposing (errorToString, get)
+module Api.Consumables exposing (delete, errorToString, get)
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
@@ -43,14 +43,11 @@ get :
     , apiUrl : String
     , pageIndex : Int
     , filterString : String
+    , hasStock : Bool
     }
     -> Effect msg
 get options =
     let
-        -- builderAssistantIdRegex : Regex
-        -- builderAssistantIdRegex =
-        --     Maybe.withDefault Regex.never <|
-        --         Regex.fromString "^\\d{7}$"
         cmd : Cmd msg
         cmd =
             Http.request
@@ -59,11 +56,13 @@ get options =
                     Url.relative [ options.apiUrl, "resources/consumables" ]
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
+                        , Url.string "name" options.filterString
+                        , Url.string "hasStock" <|
+                            if options.hasStock then
+                                "true"
 
-                        -- , if Regex.contains builderAssistantIdRegex options.filterString then
-                        --     Url.string "builderAssistantId" options.filterString
-                        --   else
-                        --     Url.string "filterString" options.filterString
+                            else
+                                "false"
                         ]
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken
@@ -76,6 +75,84 @@ get options =
                 }
     in
     Effect.sendCmd cmd
+
+
+delete :
+    { onResponse : Result Http.Error String -> msg
+    , tokens : Shared.Model.Tokens
+    , apiUrl : String
+    , consumableId : Int
+    }
+    -> Effect msg
+delete { onResponse, tokens, apiUrl, consumableId } =
+    let
+        cmd : Cmd msg
+        cmd =
+            Http.request
+                { method = "DELETE"
+                , url = Url.relative [ apiUrl, "resources/consumables", String.fromInt consumableId ] []
+                , headers =
+                    [ Http.header "x-signature-token" tokens.signatureToken
+                    , Http.header "x-header-payload-token" tokens.headerPayloadToken
+                    ]
+                , body = Http.emptyBody
+                , expect = Http.expectStringResponse onResponse handleHttpResponse
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+    in
+    Effect.sendCmd cmd
+
+
+messageDecoder : Decode.Decoder String
+messageDecoder =
+    Decode.field "message" Decode.string
+
+
+errorDecoder : Decode.Decoder Error
+errorDecoder =
+    Decode.field "data"
+        (Decode.succeed Error
+            |> Decode.required "message" Decode.string
+            |> Decode.required "status" Decode.int
+            |> Decode.required "httpStatus" Decode.string
+        )
+
+
+type alias Error =
+    { message : String
+    , status : Int
+    , httpStatus : String
+    }
+
+
+handleHttpResponse : Http.Response String -> Result Http.Error String
+handleHttpResponse response =
+    case response of
+        Http.BadUrl_ _ ->
+            Err <| BadBody "Unexpected URL format"
+
+        Http.Timeout_ ->
+            Err <| BadBody "Request timed out, please try again"
+
+        Http.NetworkError_ ->
+            Err <| BadBody "Could not connect, please try again"
+
+        Http.BadStatus_ {- statusCode -} _ body ->
+            case Decode.decodeString errorDecoder body of
+                Ok { message } ->
+                    Err <| BadBody message
+
+                Err _ ->
+                    Err <| BadBody "Something unexpected happened"
+
+        Http.GoodStatus_ {- headers -} _ body ->
+            case Decode.decodeString messageDecoder body of
+                Ok success ->
+                    Ok success
+
+                Err _ ->
+                    Err <| BadBody "Something unexpected happened"
 
 
 errorToString : Http.Error -> String

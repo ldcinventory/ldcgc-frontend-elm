@@ -16,6 +16,7 @@ import Html.Events as Events
 import Html.Extra as Html
 import Http
 import Layouts
+import List.Extra as List
 import Page exposing (Page)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
@@ -54,6 +55,7 @@ type alias Model =
     , filterString : String
     , openMenuOption : Maybe Int
     , deleteModal : Maybe Consumable
+    , showInStockOnly : Bool
     }
 
 
@@ -64,6 +66,7 @@ init user shared () =
       , filterString = ""
       , openMenuOption = Nothing
       , deleteModal = Nothing
+      , showInStockOnly = True
       }
     , Api.Consumables.get
         { onResponse = ConsumablesApiResponded
@@ -71,6 +74,7 @@ init user shared () =
         , apiUrl = shared.apiUrl
         , pageIndex = 0
         , filterString = ""
+        , hasStock = True
         }
     )
 
@@ -83,7 +87,11 @@ type Msg
     = PageChanged Int
     | MenuOptionToggle Int
     | DeleteConsumable Consumable
+    | FilterStringChanged String
+    | ToggleInStockOnly Bool
+    | DelayedFilterStringChanged String
     | RequestDeleteConsumable (Maybe Consumable)
+    | DeleteConsumableResponse Consumable (Result Http.Error String)
     | ConsumablesApiResponded (Result Http.Error (Paginator Consumable))
 
 
@@ -98,6 +106,21 @@ update user shared msg model =
                 , apiUrl = shared.apiUrl
                 , pageIndex = pageIndex
                 , filterString = model.filterString
+                , hasStock = model.showInStockOnly
+                }
+            )
+
+        ToggleInStockOnly value ->
+            ( { model
+                | showInStockOnly = value
+              }
+            , Api.Consumables.get
+                { onResponse = ConsumablesApiResponded
+                , tokens = user.tokens
+                , apiUrl = shared.apiUrl
+                , pageIndex = model.pageIndex
+                , filterString = model.filterString
+                , hasStock = value
                 }
             )
 
@@ -133,13 +156,51 @@ update user shared msg model =
 
         DeleteConsumable consumable ->
             ( { model | deleteModal = Nothing }
-            , Effect.none
-              -- Api.Consumable.delete
-              --     { onResponse = DeleteConsumableResponse consumable
-              --     , tokens = user.tokens
-              --     , apiUrl = shared.apiUrl
-              --     , builderAssistantId = volunteer.builderAssistantId
-              --     }
+            , Api.Consumables.delete
+                { onResponse = DeleteConsumableResponse consumable
+                , tokens = user.tokens
+                , apiUrl = shared.apiUrl
+                , consumableId = consumable.id
+                }
+            )
+
+        FilterStringChanged filterString ->
+            ( { model
+                | filterString = filterString
+                , pageIndex = 0
+              }
+            , Effect.delayMsg <| DelayedFilterStringChanged filterString
+            )
+
+        DelayedFilterStringChanged filterString ->
+            if filterString == model.filterString then
+                ( model
+                , Api.Consumables.get
+                    { onResponse = ConsumablesApiResponded
+                    , tokens = user.tokens
+                    , apiUrl = shared.apiUrl
+                    , pageIndex = model.pageIndex
+                    , filterString = filterString
+                    , hasStock = model.showInStockOnly
+                    }
+                )
+
+            else
+                ( model, Effect.none )
+
+        DeleteConsumableResponse consumable (Ok _) ->
+            ( { model
+                | consumables =
+                    RemoteData.map
+                        (\consumables -> { consumables | list = List.remove consumable consumables.list })
+                        model.consumables
+              }
+            , Effect.sendToast "Consumable deleted correctly." Toast.Success
+            )
+
+        DeleteConsumableResponse _ (Err _) ->
+            ( model
+            , Effect.sendToast "Something wrong happened while deleting the consumable." Toast.Danger
             )
 
 
@@ -258,144 +319,168 @@ view : Auth.User -> Model -> View Msg
 view user model =
     { title = "Consumables"
     , body =
-        case model.consumables of
-            NotAsked ->
-                [ Html.text "Loading..."
+        Html.div
+            [ Attr.class "mx-auto max-w-screen-xl px-0 sm:px-4 lg:px-12"
+            ]
+            [ Html.label
+                [ Attr.class "inline-flex items-center cursor-pointer"
                 ]
-
-            Loading ->
-                [ Spinner.view [ Attr.class "h-full w-full" ]
-                ]
-
-            Failure httpError ->
-                [ Html.div [ Attr.class "text-red-500" ]
-                    [ Html.text <| "Error: " ++ Api.Consumables.errorToString httpError ]
-                ]
-
-            Success consumables ->
-                [ Html.section
-                    [ Attr.class "bg-gray-50 dark:bg-gray-900 p-0 sd:p-3 sm:p-5"
+                [ Html.input
+                    [ Attr.type_ "checkbox"
+                    , Attr.value ""
+                    , Attr.class "sr-only peer"
+                    , Attr.checked model.showInStockOnly
+                    , Events.onCheck ToggleInStockOnly
                     ]
-                    [ Html.viewMaybe viewDeleteModal model.deleteModal
-                    , Html.div
-                        [ Attr.class "mx-auto max-w-screen-xl px-0 sm:px-4 lg:px-12"
+                    []
+                , Html.div
+                    [ Attr.class "relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                    ]
+                    []
+                , Html.span
+                    [ Attr.class "ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+                    ]
+                    [ Html.text "Only show in stock" ]
+                ]
+            ]
+            :: (case model.consumables of
+                    NotAsked ->
+                        [ Html.text "Loading..."
                         ]
-                        [ Html.div
-                            [ Attr.class "bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
+
+                    Loading ->
+                        [ Spinner.view [ Attr.class "h-full w-full" ]
+                        ]
+
+                    Failure httpError ->
+                        [ Html.div [ Attr.class "text-red-500" ]
+                            [ Html.text <| "Error: " ++ Api.Consumables.errorToString httpError ]
+                        ]
+
+                    Success consumables ->
+                        [ Html.section
+                            [ Attr.class "bg-gray-50 dark:bg-gray-900 p-0 sd:p-3 sm:p-5"
                             ]
-                            [ Html.div
-                                [ Attr.class "flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4"
+                            [ Html.viewMaybe viewDeleteModal model.deleteModal
+                            , Html.div
+                                [ Attr.class "mx-auto max-w-screen-xl px-0 sm:px-4 lg:px-12"
                                 ]
                                 [ Html.div
-                                    [ Attr.class "w-full md:w-1/2"
+                                    [ Attr.class "bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
                                     ]
-                                    [ Html.form
-                                        [ Attr.class "flex items-center"
+                                    [ Html.div
+                                        [ Attr.class "flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4"
                                         ]
-                                        [ Html.label
-                                            [ Attr.for "simple-search"
-                                            , Attr.class "sr-only"
+                                        [ Html.div
+                                            [ Attr.class "w-full md:w-1/2"
                                             ]
-                                            [ Html.text "Search" ]
-                                        , Html.div
-                                            [ Attr.class "relative w-full"
-                                            ]
-                                            [ Html.div
-                                                [ Attr.class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                            [ Html.form
+                                                [ Attr.class "flex items-center"
                                                 ]
-                                                [ Icon.search
-                                                ]
-                                            , Html.input
-                                                [ Attr.type_ "text"
-                                                , Attr.id "simple-search"
-                                                , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                                , Attr.placeholder "Search by name, last name or builder assistant id"
-
-                                                -- , Events.onInput FilterStringChanged
-                                                ]
-                                                []
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            , Html.div
-                                [ Attr.class "overflow-x-auto"
-                                ]
-                                [ Html.table
-                                    [ Attr.class "w-full text-sm text-left text-gray-500 dark:text-gray-400"
-                                    ]
-                                    [ Html.thead
-                                        [ Attr.class "text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
-                                        ]
-                                        [ Html.tr []
-                                            [ Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Id" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Name" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Model" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Description" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Price" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Purchase date" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.text "Barcode" ]
-                                            , Html.th
-                                                [ Attr.scope "col"
-                                                , Attr.class "px-4 py-3"
-                                                ]
-                                                [ Html.span
-                                                    [ Attr.class "sr-only"
+                                                [ Html.label
+                                                    [ Attr.for "simple-search"
+                                                    , Attr.class "sr-only"
                                                     ]
-                                                    [ Html.text "Actions" ]
+                                                    [ Html.text "Search" ]
+                                                , Html.div
+                                                    [ Attr.class "relative w-full"
+                                                    ]
+                                                    [ Html.div
+                                                        [ Attr.class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                                        ]
+                                                        [ Icon.search
+                                                        ]
+                                                    , Html.input
+                                                        [ Attr.type_ "text"
+                                                        , Attr.id "simple-search"
+                                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                                        , Attr.placeholder "Search by name, brand, category, model or description"
+                                                        , Events.onInput FilterStringChanged
+                                                        ]
+                                                        []
+                                                    ]
                                                 ]
                                             ]
                                         ]
-                                    , Html.tbody [] <|
-                                        case consumables.list of
-                                            [] ->
-                                                [ viewEmpty ]
+                                    , Html.div
+                                        [ Attr.class "overflow-x-auto"
+                                        ]
+                                        [ Html.table
+                                            [ Attr.class "w-full text-sm text-left text-gray-500 dark:text-gray-400"
+                                            ]
+                                            [ Html.thead
+                                                [ Attr.class "text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+                                                ]
+                                                [ Html.tr []
+                                                    [ Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Id" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Name" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Model" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Description" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Price" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Purchase date" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.text "Barcode" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
+                                                        [ Html.span
+                                                            [ Attr.class "sr-only"
+                                                            ]
+                                                            [ Html.text "Actions" ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            , Html.tbody [] <|
+                                                case consumables.list of
+                                                    [] ->
+                                                        [ viewEmpty ]
 
-                                            xs ->
-                                                List.map (viewConsumable model user) xs
+                                                    xs ->
+                                                        List.map (viewConsumable model user) xs
+                                            ]
+                                        ]
+                                    , Pagination.view
+                                        { itemsPerPage = 10
+                                        , currentPage = model.pageIndex + 1
+                                        , numItems = RemoteData.unwrap 0 .numItems model.consumables
+                                        , totalPages = RemoteData.unwrap 0 .totalPages model.consumables
+                                        , elementsThisPage = RemoteData.unwrap 0 .elementsThisPage model.consumables
+                                        , next = PageChanged <| model.pageIndex + 1
+                                        , prev = PageChanged <| model.pageIndex - 1
+                                        }
                                     ]
                                 ]
-                            , Pagination.view
-                                { itemsPerPage = 10
-                                , currentPage = model.pageIndex + 1
-                                , numItems = RemoteData.unwrap 0 .numItems model.consumables
-                                , totalPages = RemoteData.unwrap 0 .totalPages model.consumables
-                                , elementsThisPage = RemoteData.unwrap 0 .elementsThisPage model.consumables
-                                , next = PageChanged <| model.pageIndex + 1
-                                , prev = PageChanged <| model.pageIndex - 1
-                                }
                             ]
                         ]
-                    ]
-                ]
+               )
     }
 
 

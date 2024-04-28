@@ -18,13 +18,11 @@ import Http
 import Layouts
 import List.Extra as List
 import Page exposing (Page)
-import Process
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Route.Path
 import Shared
 import Shared.Model exposing (Paginator, Role(..), Volunteer)
-import Task
 import View exposing (View)
 
 
@@ -161,7 +159,7 @@ update user shared msg model =
                 | filterString = filterString
                 , pageIndex = 0
               }
-            , delayMsg <| DelayedFilterStringChanged filterString
+            , Effect.delayMsg <| DelayedFilterStringChanged filterString
             )
 
         DelayedFilterStringChanged filterString ->
@@ -203,12 +201,6 @@ subscriptions { openMenuOption } =
 
     else
         Browser.Events.onMouseDown (Dropdown.outsideTarget OnClickOutside "volunteer-dropdown")
-
-
-delayMsg : msg -> Effect msg
-delayMsg msg =
-    Task.perform (always msg) (Process.sleep 500)
-        |> Effect.sendCmd
 
 
 

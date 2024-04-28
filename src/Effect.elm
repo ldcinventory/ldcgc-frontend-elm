@@ -6,6 +6,8 @@ port module Effect exposing
     , signIn, signOut
     , map, toCmd
     , saveUser, clearUser
+    , pushPath, replacePath
+    , sendToast, sendToastMsg
     )
 
 {-|
@@ -17,10 +19,12 @@ port module Effect exposing
 @docs signIn, signOut
 @docs map, toCmd
 @docs saveUser, clearUser
+@docs pushPath, replacePath
 
 -}
 
 import Browser.Navigation
+import Components.Toast as To
 import Dict exposing (Dict)
 import Html.Attributes exposing (value)
 import Json.Encode as Encode
@@ -31,6 +35,7 @@ import Shared.Json exposing (encodeUser)
 import Shared.Model
 import Shared.Msg
 import Task
+import Toast
 import Url exposing (Url)
 
 
@@ -241,9 +246,19 @@ toCmd options effect =
 
 signIn : Shared.Model.User -> Effect msg
 signIn user =
-    SendSharedMsg (Shared.Msg.SignIn user)
+    SendSharedMsg <| Shared.Msg.SignIn user
 
 
 signOut : Effect msg
 signOut =
     SendSharedMsg Shared.Msg.SignOut
+
+
+sendToast : String -> To.ToastType -> Effect msg
+sendToast message toastType =
+    SendSharedMsg <| Shared.Msg.AddToast message toastType
+
+
+sendToastMsg : Toast.Msg -> Effect msg
+sendToastMsg msg =
+    SendSharedMsg <| Shared.Msg.ToastMsg msg

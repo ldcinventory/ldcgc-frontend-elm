@@ -2,8 +2,6 @@ module Pages.Tools exposing (Model, Msg, page)
 
 import Auth
 import Effect exposing (Effect)
-import Html
-import Html.Attributes as Attr
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
@@ -12,7 +10,7 @@ import View exposing (View)
 
 
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
-page user shared route =
+page user _ _ =
     Page.new
         { init = init
         , update = update
@@ -23,7 +21,7 @@ page user shared route =
 
 
 toLayout : Auth.User -> Model -> Layouts.Layout msg
-toLayout user model =
+toLayout user _ =
     Layouts.Sidebar
         { title = "Tools"
         , user = user
@@ -67,7 +65,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -76,5 +74,5 @@ subscriptions model =
 
 
 view : Model -> View Msg
-view model =
+view _ =
     View.fromString "Pages.Tools"

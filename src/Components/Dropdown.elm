@@ -45,12 +45,11 @@ isOutsideDropdown dropdownId =
 view :
     { open : Bool
     , toggle : msg
-    , onDelete : msg -- FIXME: temporary, this is supper crappy...
-    , onWarning : msg -- FIXME: this is EVEN CRAPPIER!
+    , options : List (Html msg)
     , dropdownId : String
     }
     -> Html msg
-view { open, toggle, onDelete, onWarning, dropdownId } =
+view { open, toggle, options, dropdownId } =
     Html.div
         [ Attr.class "flex items-center justify-end"
         , Attr.id dropdownId
@@ -85,36 +84,5 @@ view { open, toggle, onDelete, onWarning, dropdownId } =
                 ]
             , Attr.class "absolute z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
             ]
-            [ Html.ul
-                [ Attr.class "py-1 text-sm text-gray-700 dark:text-gray-200"
-                , Attr.attribute "aria-labelledby" "edit-dropdown-button"
-                ]
-                [ Html.li []
-                    [ Html.a
-                        [ Attr.href "#"
-                        , Events.onClick onWarning
-                        , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                        ]
-                        [ Html.text "Show" ]
-                    ]
-                , Html.li []
-                    [ Html.a
-                        [ Attr.href "#"
-                        , Events.onClick onWarning
-                        , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                        ]
-                        [ Html.text "Edit" ]
-                    ]
-                ]
-            , Html.div
-                [ Attr.class "py-1"
-                ]
-                [ Html.a
-                    [ Attr.href "#"
-                    , Events.onClick onDelete
-                    , Attr.class "block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                    ]
-                    [ Html.text "Delete" ]
-                ]
-            ]
+            options
         ]

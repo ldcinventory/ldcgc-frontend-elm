@@ -1,6 +1,8 @@
 module Shared.Msg exposing (Msg(..))
 
+import Components.Toast as To
 import Shared.Model
+import Toast
 
 
 {-| Normally, this value would live in "Shared.elm"
@@ -13,3 +15,5 @@ own file, so they can be imported by `Effect.elm`
 type Msg
     = SignIn Shared.Model.User
     | SignOut
+    | ToastMsg Toast.Msg
+    | AddToast String To.ToastType

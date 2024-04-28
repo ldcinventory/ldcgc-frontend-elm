@@ -21,6 +21,7 @@ import Route.Path
 import Shared.Json exposing (decodeUser)
 import Shared.Model
 import Shared.Msg
+import Toast
 
 
 
@@ -56,7 +57,10 @@ init flagsResult _ =
             flagsResult
                 |> Result.withDefault { user = Nothing, apiUrl = "" }
     in
-    ( { user = flags.user, apiUrl = flags.apiUrl }
+    ( { user = flags.user
+      , apiUrl = flags.apiUrl
+      , tray = Toast.tray
+      }
     , Effect.none
     )
 
@@ -70,18 +74,33 @@ type alias Msg =
 
 
 update : Route () -> Msg -> Model -> ( Model, Effect Msg )
-update _ msg model =
+update route msg model =
+    let
+        maybeRedirect : Maybe Route.Path.Path
+        maybeRedirect =
+            Dict.get "from" route.query
+                |> Maybe.andThen Route.Path.fromString
+    in
     case msg of
         Shared.Msg.SignIn user ->
             ( { model
                 | user = Just user
               }
             , Effect.batch
-                [ Effect.pushRoute
-                    { path = Route.Path.Home_
-                    , query = Dict.empty
-                    , hash = Nothing
-                    }
+                [ case maybeRedirect of
+                    Just redirect ->
+                        Effect.pushRoute
+                            { path = redirect
+                            , query = route.query
+                            , hash = route.hash
+                            }
+
+                    Nothing ->
+                        Effect.pushRoute
+                            { path = Route.Path.Home_
+                            , query = Dict.empty
+                            , hash = Nothing
+                            }
 
                 -- FIXME: only save in localStorage if `Remember me?` is ✅
                 , Effect.saveUser user
@@ -91,6 +110,25 @@ update _ msg model =
         Shared.Msg.SignOut ->
             ( { model | user = Nothing }
             , Effect.clearUser
+            )
+
+        Shared.Msg.ToastMsg toastMsg ->
+            let
+                ( newTray, newTmesg ) =
+                    Toast.update toastMsg model.tray
+            in
+            ( { model | tray = newTray }
+            , Effect.sendCmd <| Cmd.map Shared.Msg.ToastMsg newTmesg
+            )
+
+        Shared.Msg.AddToast message type_ ->
+            let
+                ( newTray, tmesg ) =
+                    Toast.add model.tray <|
+                        Toast.expireIn 5000 { message = message, toastType = type_ }
+            in
+            ( { model | tray = newTray }
+            , Effect.sendCmd <| Cmd.map Shared.Msg.ToastMsg tmesg
             )
 
 

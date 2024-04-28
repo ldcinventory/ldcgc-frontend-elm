@@ -16,15 +16,15 @@ import Maybe.Extra as Maybe
 import Regex exposing (Regex)
 import Set.Any as Set
 import Shared.Json
-import Shared.Model exposing (Absence, Volunteer, VolunteerDetail, Volunteers)
+import Shared.Model exposing (Absence, Paginator, Volunteer, VolunteerDetail)
 import Time exposing (Weekday(..))
 import Url.Builder as Url
 
 
-decoder : Decode.Decoder Volunteers
+decoder : Decode.Decoder (Paginator Volunteer)
 decoder =
     Decode.field "data" <|
-        (Decode.succeed Volunteers
+        (Decode.succeed Paginator
             |> Decode.required "numElements" Decode.int
             |> Decode.required "totalPages" Decode.int
             |> Decode.required "elementsThisPage" Decode.int
@@ -61,11 +61,11 @@ volunteerDecoder =
         |> Decode.required "name" Decode.string
         |> Decode.required "lastName" Decode.string
         |> Decode.required "builderAssistantId" Decode.string
-        |> Decode.required "isActive" Decode.bool
+        |> Decode.optional "isActive" (Decode.maybe Decode.bool) Nothing
 
 
 get :
-    { onResponse : Result Http.Error Volunteers -> msg
+    { onResponse : Result Http.Error (Paginator Volunteer) -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
     , pageIndex : Int

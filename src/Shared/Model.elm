@@ -2,7 +2,7 @@ module Shared.Model exposing (..)
 
 import Components.Toast as To
 import Set.Any exposing (AnySet)
-import Time exposing (Weekday)
+import Time exposing (Posix, Weekday)
 import Toast
 
 
@@ -46,11 +46,11 @@ type alias User =
     }
 
 
-type alias Volunteers =
-    { numVolunteers : Int
+type alias Paginator a =
+    { numItems : Int
     , totalPages : Int
     , elementsThisPage : Int
-    , list : List Volunteer
+    , list : List a
     }
 
 
@@ -59,7 +59,7 @@ type alias Volunteer =
     , name : String
     , lastName : String
     , builderAssistantId : String
-    , isActive : Bool
+    , isActive : Maybe Bool
     }
 
 
@@ -79,4 +79,19 @@ type alias VolunteerDetail =
     , isActive : Bool
     , absences : List Absence
     , availability : AnySet String Weekday
+    }
+
+
+type alias Consumable =
+    { id : Int
+    , barcode : String
+    , price : Float
+    , purchaseDate : Posix
+    , name : String
+    , model : String
+    , description : String
+    , urlImages : List String
+    , quantityEachItem : Float
+    , stock : Float
+    , minStock : Float
     }

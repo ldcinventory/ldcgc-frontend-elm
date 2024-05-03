@@ -20,6 +20,7 @@ import List.Extra as List
 import Page exposing (Page)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
+import Route.Path
 import Shared
 import Shared.Model exposing (Consumable, Paginator, Role(..))
 import Time
@@ -283,17 +284,17 @@ viewConsumable model user consumable =
                             ]
                             [ Html.li []
                                 [ Html.a
-                                    [ -- Route.Path.href <|
-                                      -- Route.Path.Volunteers_BuilderAssistantId_
-                                      --     { builderAssistantId = volunteer.builderAssistantId }
-                                      Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    [ Route.Path.href <|
+                                        Route.Path.Consumables_ConsumableId_
+                                            { consumableId = String.fromInt consumable.id }
+                                    , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                                     ]
                                     [ Html.text "Show" ]
                                 ]
                             , Html.li []
                                 [ Html.a
-                                    [ -- Attr.href <| "/volunteers/" ++ volunteer.builderAssistantId ++ "?edit=true"
-                                      Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    [ Attr.href <| "/consumables/" ++ String.fromInt consumable.id ++ "?edit=true"
+                                    , Attr.class "block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                                     ]
                                     [ Html.text "Edit" ]
                                 ]

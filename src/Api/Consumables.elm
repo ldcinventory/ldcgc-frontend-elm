@@ -1,4 +1,10 @@
-module Api.Consumables exposing (delete, errorToString, get)
+module Api.Consumables exposing
+    ( Error
+    , delete
+    , errorToString
+    , get
+    , getDetail
+    )
 
 import Effect exposing (Effect)
 import Http exposing (Error(..))
@@ -97,6 +103,33 @@ delete { onResponse, tokens, apiUrl, consumableId } =
                     ]
                 , body = Http.emptyBody
                 , expect = Http.expectStringResponse onResponse handleHttpResponse
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+    in
+    Effect.sendCmd cmd
+
+
+getDetail :
+    { onResponse : Result Http.Error Consumable -> msg
+    , tokens : Shared.Model.Tokens
+    , apiUrl : String
+    , consumableId : String
+    }
+    -> Effect msg
+getDetail options =
+    let
+        cmd : Cmd msg
+        cmd =
+            Http.request
+                { method = "GET"
+                , url = Url.relative [ options.apiUrl, "resources/consumables", options.consumableId ] []
+                , headers =
+                    [ Http.header "x-signature-token" options.tokens.signatureToken
+                    , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
+                    ]
+                , body = Http.emptyBody
+                , expect = Http.expectJson options.onResponse consumableDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }

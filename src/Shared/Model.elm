@@ -59,7 +59,7 @@ type alias Volunteer =
     , name : String
     , lastName : String
     , builderAssistantId : String
-    , isActive : Maybe Bool
+    , isActive : Bool
     }
 
 
@@ -76,7 +76,7 @@ type alias VolunteerDetail =
     , name : String
     , lastName : String
     , builderAssistantId : String
-    , isActive : Maybe Bool
+    , isActive : Bool
     , absences : List Absence
     , availability : AnySet String Weekday
     }

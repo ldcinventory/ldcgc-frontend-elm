@@ -43,8 +43,6 @@ get :
     , apiUrl : String
     , pageIndex : Int
     , filterString : String
-
-    -- FIXME: we need to figure out a way to pass this to the /loose endpoint
     , hasStock : Bool
     }
     -> Effect msg
@@ -59,6 +57,12 @@ get options =
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
                         , Url.string "filterString" options.filterString
+                        , Url.string "hasStock" <|
+                            if options.hasStock then
+                                "true"
+
+                            else
+                                "false"
                         ]
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken

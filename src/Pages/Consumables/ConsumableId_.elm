@@ -1,7 +1,5 @@
 module Pages.Consumables.ConsumableId_ exposing (Model, Msg, page)
 
--- import Shared.Json exposing (encodeVolunteerDetail)
-
 import Api.Consumables
 import Auth
 import Components.Button as Button
@@ -9,7 +7,7 @@ import Components.Spinner as Spinner
 import Components.Toast as Toast
 import Dict
 import Effect exposing (Effect)
-import Html exposing (Html)
+import Html
 import Html.Attributes as Attr
 import Html.Attributes.Extra as Attr
 import Html.Events as Events
@@ -21,6 +19,7 @@ import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Shared.Json exposing (encodeConsumable)
 import Shared.Model exposing (Consumable)
 import Time exposing (Weekday(..))
 import View exposing (View)
@@ -81,11 +80,12 @@ init user shared route _ =
 
 
 type Msg
-    = ConsumablesApiResponded (Result Http.Error Consumable)
-    | EditParameterChanged { from : Maybe String, to : Maybe String }
+    = CancelEditMode String
     | SaveChanges Consumable
+    | InputChanged (Consumable -> Consumable)
     | EditConsumableApiResponse (Result Http.Error String)
-    | CancelEditMode String
+    | ConsumablesApiResponded (Result Http.Error Consumable)
+    | EditParameterChanged { from : Maybe String, to : Maybe String }
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -111,6 +111,11 @@ update user shared msg model =
                     { consumableId = consumableId }
             )
 
+        InputChanged fn ->
+            ( { model | consumable = RemoteData.map fn model.consumable }
+            , Effect.none
+            )
+
         EditParameterChanged query ->
             case query.to of
                 Just "true" ->
@@ -126,14 +131,14 @@ update user shared msg model =
         SaveChanges details ->
             ( model
             , Effect.batch
-                -- FIXME: [ Api.Consumables.put
-                --     { onResponse = EditVolunteerApiResponse
-                --     , tokens = user.tokens
-                --     , apiUrl = shared.apiUrl
-                --     , jsonBody = encodeVolunteerDetail details
-                --     , builderAssistantId = details.builderAssistantId
-                --     }
-                [ Effect.pushPath <|
+                [ Api.Consumables.put
+                    { onResponse = EditConsumableApiResponse
+                    , tokens = user.tokens
+                    , apiUrl = shared.apiUrl
+                    , jsonBody = encodeConsumable details
+                    , consumableId = String.fromInt details.id
+                    }
+                , Effect.pushPath <|
                     Route.Path.Consumables_ConsumableId_
                         { consumableId = String.fromInt details.id }
                 ]
@@ -172,48 +177,168 @@ view model =
                     ]
                 ]
 
-            Success { name, barcode, stock, minStock, id } ->
-                -- FIXME: display properly all things
+            Success consumable ->
                 [ Html.div
-                    [ Attr.class "p-3 flex flex-col gap-4 items-start" ]
-                    [ Html.viewIf (not model.editMode) <|
-                        Html.a
-                            [ Attr.href "?edit=true"
-                            , Attr.class "text-blue-500 hover:text-blue-700"
+                    [ Attr.class "flex p-3 gap-6 justify-start flex-col md:flex-row" ]
+                    [ Html.div [ Attr.class "flex flex-col" ]
+                        [ Html.h2
+                            [ Attr.class "text-4xl font-extrabold dark:text-white pb-3"
                             ]
-                            [ Html.text "Edit" ]
-                    , Html.h2
-                        [ Attr.class "text-4xl font-extrabold dark:text-white"
-                        ]
-                        [ Html.text name ]
-                    , Html.div [ Attr.class "flex gap-2" ]
-                        [ Html.div
-                            [ Attr.class "relative inline-flex items-center justify-center w-32 h-32 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600"
+                            [ Html.text <| consumable.name ++ " "
+                            , Html.viewIf (not model.editMode) <|
+                                Html.a
+                                    [ Attr.href "?edit=true"
+                                    , Attr.class "text-blue-500 hover:text-blue-700"
+                                    ]
+                                    [ Html.text "Edit" ]
                             ]
-                            [ Html.span
-                                [ Attr.class "font-medium text-gray-600 dark:text-gray-300"
+                        , Html.div [ Attr.class "flex gap-2" ]
+                            [ List.head consumable.urlImages
+                                |> Html.viewMaybe
+                                    (\url ->
+                                        Html.div
+                                            [ Attr.class "relative inline-flex items-center justify-center w-32 h-32 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600"
+                                            ]
+                                            [ Html.img
+                                                [ Attr.src url
+                                                , Attr.class "h-14 w-14 rounded"
+                                                , Attr.alt consumable.name
+                                                ]
+                                                []
+                                            ]
+                                    )
+                            , Html.div [ Attr.class "flex flex-col gap-2 justify-center align-middle" ]
+                                [ Html.text "Consumable barcode"
+                                , Html.span [ Attr.class "text-xl font-mono tracking-widest" ]
+                                    [ Html.text consumable.barcode ]
+                                , Html.strong
+                                    [ Attr.class "text-4xl font-barcode w-fit tracking-widest" ]
+                                    [ Html.text consumable.barcode ]
                                 ]
-                                [ Html.text name ]
-                            ]
-                        , Html.div [ Attr.class "flex flex-col gap-2 justify-center align-middle" ]
-                            [ Html.text "Volunteer barcode"
-                            , Html.span [ Attr.class "text-xl font-mono tracking-widest" ]
-                                [ Html.text <| String.fromInt id ]
-                            , Html.strong
-                                [ Attr.class "text-4xl font-barcode w-fit tracking-widest" ]
-                                [ Html.text barcode ]
                             ]
                         ]
-                    , Html.div
-                        [ Attr.attribute "classname" "h-screen bg-gray-100 p-6"
-                        ]
+                    , Html.form []
                         [ Html.div
-                            [ Attr.class "w-full max-w-screen-sm mx-auto"
+                            [ Attr.class "grid gap-6 mb-6 md:grid-cols-2"
                             ]
-                            [ Html.h3
-                                [ Attr.class "text-2xl font-extrabold dark:text-white mb-2"
+                            [ Html.div []
+                                [ Html.label
+                                    [ Attr.for "model"
+                                    , Attr.class "block mb-2 text-sm font-bold text-gray-900 dark:text-white"
+                                    ]
+                                    [ Html.text "Model" ]
+                                , if model.editMode then
+                                    Html.input
+                                        [ Attr.type_ "text"
+                                        , Attr.id "model"
+                                        , Events.onInput <| \str -> InputChanged (\c -> { c | model = str })
+                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        , Attr.value consumable.model
+                                        ]
+                                        []
+
+                                  else
+                                    Html.span [] [ Html.text consumable.model ]
                                 ]
-                                [ Html.text "Availability" ]
+                            , Html.div []
+                                [ Html.label
+                                    [ Attr.for "description"
+                                    , Attr.class "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                    ]
+                                    [ Html.text "Description" ]
+                                , if model.editMode then
+                                    Html.input
+                                        [ Attr.type_ "text"
+                                        , Attr.id "description"
+                                        , Events.onInput <| \str -> InputChanged (\c -> { c | description = str })
+                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        , Attr.value consumable.description
+                                        ]
+                                        []
+
+                                  else
+                                    Html.span [] [ Html.text consumable.description ]
+                                ]
+                            , Html.div []
+                                [ Html.label
+                                    [ Attr.for "price"
+                                    , Attr.class "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                    ]
+                                    [ Html.text "Price" ]
+                                , if model.editMode then
+                                    Html.input
+                                        [ Attr.type_ "number"
+                                        , Attr.id "price"
+                                        , Attr.min "0"
+                                        , Events.onInput <| \str -> InputChanged (\c -> { c | price = str |> String.toFloat |> Maybe.withDefault c.price })
+                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        , Attr.value <| String.fromFloat consumable.price
+                                        ]
+                                        []
+
+                                  else
+                                    Html.span [] [ Html.text <| String.fromFloat consumable.price ++ " €" ]
+                                ]
+                            , Html.div []
+                                [ Html.label
+                                    [ Attr.for "stock"
+                                    , Attr.class "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                    ]
+                                    [ Html.text "Stock" ]
+                                , if model.editMode then
+                                    Html.input
+                                        [ Attr.type_ "number"
+                                        , Attr.id "stock"
+                                        , Attr.min "0"
+                                        , Events.onInput <| \str -> InputChanged (\c -> { c | stock = str |> String.toFloat |> Maybe.withDefault c.stock })
+                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        , Attr.value <| String.fromFloat consumable.stock
+                                        ]
+                                        []
+
+                                  else
+                                    Html.span [] [ Html.text <| String.fromFloat consumable.stock ]
+                                ]
+                            , Html.div []
+                                [ Html.label
+                                    [ Attr.for "min-stock"
+                                    , Attr.class "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                    ]
+                                    [ Html.text "Min. Stock" ]
+                                , if model.editMode then
+                                    Html.input
+                                        [ Attr.type_ "number"
+                                        , Attr.id "min-stock"
+                                        , Attr.min "0"
+                                        , Events.onInput <| \str -> InputChanged (\c -> { c | minStock = str |> String.toFloat |> Maybe.withDefault c.minStock })
+                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        , Attr.value <| String.fromFloat consumable.minStock
+                                        ]
+                                        []
+
+                                  else
+                                    Html.span [] [ Html.text <| String.fromFloat consumable.minStock ]
+                                ]
+                            , Html.div []
+                                [ Html.label
+                                    [ Attr.for "quantity-each"
+                                    , Attr.class "block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                    ]
+                                    [ Html.text "Quantity each" ]
+                                , if model.editMode then
+                                    Html.input
+                                        [ Attr.type_ "number"
+                                        , Attr.id "quantity-each"
+                                        , Attr.min "0"
+                                        , Events.onInput <| \str -> InputChanged (\c -> { c | quantityEachItem = str |> String.toFloat |> Maybe.withDefault c.quantityEachItem })
+                                        , Attr.class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        , Attr.value <| String.fromFloat consumable.quantityEachItem
+                                        ]
+                                        []
+
+                                  else
+                                    Html.span [] [ Html.text <| String.fromFloat consumable.quantityEachItem ]
+                                ]
                             ]
                         ]
                     ]
@@ -229,7 +354,7 @@ view model =
                             }
                         , Button.secondary
                             { content = "Cancel"
-                            , onClick = CancelEditMode <| String.fromInt id
+                            , onClick = CancelEditMode <| String.fromInt consumable.id
                             , attrs = [ Attr.class "w-48" ]
                             }
                         ]

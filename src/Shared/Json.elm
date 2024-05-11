@@ -3,6 +3,7 @@ module Shared.Json exposing
     , decodeAvailability
     , decodeRole
     , decodeUser
+    , encodeConsumable
     , encodeUser
     , encodeVolunteerDetail
     )
@@ -162,4 +163,18 @@ encodeVolunteerDetail volunteerDetails =
         , ( "builderAssistantId", Encode.string volunteerDetails.builderAssistantId )
         , ( "absences", Encode.list Encode.string [] )
         , ( "availability", Set.encode encodeWeekday volunteerDetails.availability )
+        ]
+
+
+encodeConsumable : Shared.Model.Consumable -> Encode.Value
+encodeConsumable details =
+    Encode.object
+        [ ( "id", Encode.int details.id )
+        , ( "name", Encode.string details.name )
+        , ( "barcode", Encode.string details.barcode )
+        , ( "model", Encode.string details.model )
+        , ( "description", Encode.string details.description )
+        , ( "stock", Encode.float details.stock )
+        , ( "minStock", Encode.float details.minStock )
+        , ( "quantityEachItem", Encode.float details.quantityEachItem )
         ]

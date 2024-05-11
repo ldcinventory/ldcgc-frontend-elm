@@ -4,6 +4,7 @@ module Api.Consumables exposing
     , errorToString
     , get
     , getDetail
+    , put
     )
 
 import Effect exposing (Effect)
@@ -11,6 +12,7 @@ import Http exposing (Error(..))
 import Iso8601
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
+import Json.Encode as Encode
 import Shared.Model exposing (Consumable, Paginator)
 import Time exposing (Weekday(..))
 import Url.Builder as Url
@@ -129,7 +131,35 @@ getDetail options =
                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
-                , expect = Http.expectJson options.onResponse consumableDecoder
+                , expect = Http.expectJson options.onResponse (Decode.field "data" consumableDecoder)
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+    in
+    Effect.sendCmd cmd
+
+
+put :
+    { onResponse : Result Http.Error String -> msg
+    , tokens : Shared.Model.Tokens
+    , apiUrl : String
+    , jsonBody : Encode.Value
+    , consumableId : String
+    }
+    -> Effect msg
+put { onResponse, tokens, apiUrl, consumableId, jsonBody } =
+    let
+        cmd : Cmd msg
+        cmd =
+            Http.request
+                { method = "PUT"
+                , url = Url.relative [ apiUrl, "resources/consumables", consumableId ] []
+                , headers =
+                    [ Http.header "x-signature-token" tokens.signatureToken
+                    , Http.header "x-header-payload-token" tokens.headerPayloadToken
+                    ]
+                , body = Http.jsonBody jsonBody
+                , expect = Http.expectStringResponse onResponse handleHttpResponse
                 , timeout = Nothing
                 , tracker = Nothing
                 }

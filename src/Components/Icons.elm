@@ -254,3 +254,22 @@ close =
             ]
             []
         ]
+
+
+clock : Svg msg
+clock =
+    svg
+        [ SvgAttr.class "flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+        , Attr.attribute "aria-hidden" "true"
+        , SvgAttr.width "24"
+        , SvgAttr.height "24"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 24 24"
+        ]
+        [ path
+            [ SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
+            , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]

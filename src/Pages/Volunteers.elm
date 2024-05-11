@@ -18,13 +18,11 @@ import Http
 import Layouts
 import List.Extra as List
 import Page exposing (Page)
-import Process
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
 import Route.Path
 import Shared
-import Shared.Model exposing (Role(..), Volunteer, Volunteers)
-import Task
+import Shared.Model exposing (Paginator, Role(..), Volunteer)
 import View exposing (View)
 
 
@@ -52,7 +50,7 @@ toLayout user _ =
 
 
 type alias Model =
-    { volunteers : WebData Volunteers
+    { volunteers : WebData (Paginator Volunteer)
     , pageIndex : Int
     , filterString : String
     , openMenuOption : Maybe Int
@@ -91,7 +89,7 @@ type Msg
     | DeleteVolunteer Volunteer
     | RequestDeleteVolunteer (Maybe Volunteer)
     | DeleteVolunteerResponse Volunteer (Result Http.Error String)
-    | VolunteersApiResponded (Result Http.Error Volunteers)
+    | VolunteersApiResponded (Result Http.Error (Paginator Volunteer))
 
 
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
@@ -161,7 +159,7 @@ update user shared msg model =
                 | filterString = filterString
                 , pageIndex = 0
               }
-            , delayMsg <| DelayedFilterStringChanged filterString
+            , Effect.delayMsg <| DelayedFilterStringChanged filterString
             )
 
         DelayedFilterStringChanged filterString ->
@@ -203,12 +201,6 @@ subscriptions { openMenuOption } =
 
     else
         Browser.Events.onMouseDown (Dropdown.outsideTarget OnClickOutside "volunteer-dropdown")
-
-
-delayMsg : msg -> Effect msg
-delayMsg msg =
-    Task.perform (always msg) (Process.sleep 500)
-        |> Effect.sendCmd
 
 
 
@@ -470,7 +462,7 @@ view user model =
                             , Pagination.view
                                 { itemsPerPage = 10
                                 , currentPage = model.pageIndex + 1
-                                , numItems = RemoteData.unwrap 0 .numVolunteers model.volunteers
+                                , numItems = RemoteData.unwrap 0 .numItems model.volunteers
                                 , totalPages = RemoteData.unwrap 0 .totalPages model.volunteers
                                 , elementsThisPage = RemoteData.unwrap 0 .elementsThisPage model.volunteers
                                 , next = PageChanged <| model.pageIndex + 1

@@ -117,7 +117,7 @@ view config =
                 , pageNumberView = \index _ -> String.fromInt index
                 , gapView = "..."
                 }
-                (Bounded.between 0 config.totalPages |> Bounded.set config.currentPage)
+                (Bounded.between 1 config.totalPages |> Bounded.set config.currentPage)
     in
     Html.nav
         [ Attr.class "flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"

@@ -82,9 +82,45 @@ type alias VolunteerDetail =
     }
 
 
+type alias Brand =
+    { id : Int
+    , name : String
+    , locked : Bool
+    }
+
+
+type alias ResourceType =
+    { id : Int
+    , name : String
+    , locked : Bool
+    }
+
+
+type alias Location =
+    { id : Int
+    , name : String
+    , description : String
+
+    -- , parent : Location
+    -- , locations : List Location
+    }
+
+
+type alias Group =
+    { id : Int
+    , name : String
+    , description : Maybe String
+    , urlImage : Maybe String
+    , phoneNumber : String
+    , location : Location
+    }
+
+
 type alias Consumable =
     { id : Int
     , barcode : String
+    , resourceType : ResourceType
+    , brand : Brand
     , price : Float
     , purchaseDate : Posix
     , name : String
@@ -94,4 +130,6 @@ type alias Consumable =
     , quantityEachItem : Float
     , stock : Float
     , minStock : Float
+    , location : Location
+    , group : Group
     }

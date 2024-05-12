@@ -13,7 +13,15 @@ import Iso8601
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
 import Json.Encode as Encode
-import Shared.Model exposing (Consumable, Paginator)
+import Shared.Model
+    exposing
+        ( Brand
+        , Consumable
+        , Group
+        , Location
+        , Paginator
+        , ResourceType
+        )
 import Time exposing (Weekday(..))
 import Url.Builder as Url
 
@@ -29,11 +37,48 @@ decoder =
         )
 
 
+brandDecoder : Decode.Decoder Brand
+brandDecoder =
+    Decode.succeed Brand
+        |> Decode.required "id" Decode.int
+        |> Decode.required "name" Decode.string
+        |> Decode.optional "locked" Decode.bool False
+
+
+resourceTypeDecoder : Decode.Decoder ResourceType
+resourceTypeDecoder =
+    Decode.succeed ResourceType
+        |> Decode.required "id" Decode.int
+        |> Decode.required "name" Decode.string
+        |> Decode.optional "locked" Decode.bool False
+
+
+locationDecoder : Decode.Decoder Location
+locationDecoder =
+    Decode.succeed Location
+        |> Decode.required "id" Decode.int
+        |> Decode.required "name" Decode.string
+        |> Decode.required "description" Decode.string
+
+
+groupDecoder : Decode.Decoder Group
+groupDecoder =
+    Decode.succeed Group
+        |> Decode.required "id" Decode.int
+        |> Decode.required "name" Decode.string
+        |> Decode.optional "description" (Decode.maybe Decode.string) Nothing
+        |> Decode.optional "urlImage" (Decode.maybe Decode.string) Nothing
+        |> Decode.required "phoneNumber" Decode.string
+        |> Decode.required "location" locationDecoder
+
+
 consumableDecoder : Decode.Decoder Consumable
 consumableDecoder =
     Decode.succeed Consumable
         |> Decode.required "id" Decode.int
         |> Decode.required "barcode" Decode.string
+        |> Decode.required "resourceType" resourceTypeDecoder
+        |> Decode.required "brand" brandDecoder
         |> Decode.required "price" Decode.float
         |> Decode.required "purchaseDate" Iso8601.decoder
         |> Decode.required "name" Decode.string
@@ -43,6 +88,8 @@ consumableDecoder =
         |> Decode.required "quantityEachItem" Decode.float
         |> Decode.required "stock" Decode.float
         |> Decode.required "minStock" Decode.float
+        |> Decode.required "location" locationDecoder
+        |> Decode.required "group" groupDecoder
 
 
 get :
@@ -140,7 +187,7 @@ getDetail options =
 
 
 put :
-    { onResponse : Result Http.Error String -> msg
+    { onResponse : Result Http.Error Consumable -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
     , jsonBody : Encode.Value
@@ -159,7 +206,7 @@ put { onResponse, tokens, apiUrl, consumableId, jsonBody } =
                     , Http.header "x-header-payload-token" tokens.headerPayloadToken
                     ]
                 , body = Http.jsonBody jsonBody
-                , expect = Http.expectStringResponse onResponse handleHttpResponse
+                , expect = Http.expectJson onResponse (Decode.field "data" consumableDecoder)
                 , timeout = Nothing
                 , tracker = Nothing
                 }

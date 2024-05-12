@@ -83,8 +83,8 @@ type Msg
     = CancelEditMode String
     | SaveChanges Consumable
     | InputChanged (Consumable -> Consumable)
-    | EditConsumableApiResponse (Result Http.Error String)
     | ConsumablesApiResponded (Result Http.Error Consumable)
+    | EditConsumableApiResponse (Result Http.Error Consumable)
     | EditParameterChanged { from : Maybe String, to : Maybe String }
 
 
@@ -96,9 +96,9 @@ update user shared msg model =
             , Effect.none
             )
 
-        EditConsumableApiResponse (Ok message) ->
+        EditConsumableApiResponse (Ok _) ->
             ( { model | editMode = False }
-            , Effect.sendToast message Toast.Success
+            , Effect.sendToast "Consumable edited correctly." Toast.Success
             )
 
         EditConsumableApiResponse (Err httpError) ->

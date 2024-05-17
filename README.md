@@ -20,22 +20,12 @@ about deploying your app for free using Netlify or Vercel.
 
 ## TODO:
 
-- [x] Remove the users/me endpoint (login returns that)
-- [x] Add optional name from volunteers.name
-- [x] Remove tailwind modules and use barebones tailwindcss
-- [x] Pass `NODE_ENV` variables to Elm-Land 🌈
-- [x] Add EULA acceptance pages
-- [x] Encode/Decode Tokens as a standalone type
-- [x] Put back dark mode in sign in page and sidebar!
-- [x] Customise NotFound 404 page
-- [x] Extract Components/Button and re-use it!
-- [x] Implement responsive sidebar menu
-- [x] Implement volunteers page
-- [x] Move notifications to Sidebar.elm
-- [x] Implement consumables page
 - [ ] Implement password recovery workflow
+- [ ] Convince backend to use Bearer token and simplify all API calls... 🙏🏻
 - [ ] Check expiry token on session reconnect and redirect to Sign in if expired
 - [ ] Only store user in localStorage if ✅ Remember me
-- [ ] Extract Components/Modal and re-use it!
 - [ ] Implement tools page
+- [ ] Implement register tools tab (register page)
+- [x] Implement register consumables tab (register page)
 - [ ] Use [elm-select](https://github.com/sporto/elm-select/tree/6.2.1) for Registering tools/consumables
+- [ ] Extract Components/Modal and re-use it!

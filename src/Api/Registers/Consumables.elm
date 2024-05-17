@@ -90,16 +90,19 @@ delete :
     { onResponse : Result Http.Error String -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
-    , consumableId : Int
+    , registerId : Int
     }
     -> Effect msg
-delete { onResponse, tokens, apiUrl, consumableId } =
+delete { onResponse, tokens, apiUrl, registerId } =
     let
         cmd : Cmd msg
         cmd =
             Http.request
                 { method = "DELETE"
-                , url = Url.relative [ apiUrl, "resources/consumables", String.fromInt consumableId ] []
+                , url =
+                    Url.relative
+                        [ apiUrl, "resources/consumables/registers", String.fromInt registerId ]
+                        []
                 , headers =
                     [ Http.header "x-signature-token" tokens.signatureToken
                     , Http.header "x-header-payload-token" tokens.headerPayloadToken

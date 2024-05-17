@@ -141,7 +141,7 @@ update user shared msg model =
                 { onResponse = DeleteConsumableRegisterResponse consumable
                 , tokens = user.tokens
                 , apiUrl = shared.apiUrl
-                , consumableId = consumable.id
+                , registerId = consumable.id
                 }
             )
 

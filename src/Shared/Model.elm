@@ -133,3 +133,21 @@ type alias Consumable =
     , location : Location
     , group : Group
     }
+
+
+type alias ConsumableRegister =
+    { id : Int
+    , consumableBarcode : String
+    , consumableName : String
+    , consumableUrlImages : List String
+    , volunteerBuilderAssistantId : String
+    , volunteerName : String
+    , volunteerLastName : String
+    , stockAmountRequest : Float
+    , stockAmountReturn : Maybe Float
+    , consumableStockType : String
+    , registerFrom : Posix
+    , registerTo : Maybe Posix
+    , closedRegister : Bool
+    , processingStockChanges : Bool
+    }

@@ -29,7 +29,7 @@ consumableDecoder =
         |> Decode.required "id" Decode.int
         |> Decode.required "consumableBarcode" Decode.string
         |> Decode.required "consumableName" Decode.string
-        |> Decode.required "consumableUrlImages" (Decode.list Decode.string)
+        |> Decode.optional "consumableUrlImages" (Decode.list Decode.string) []
         |> Decode.required "volunteerBuilderAssistantId" Decode.string
         |> Decode.required "volunteerName" Decode.string
         |> Decode.required "volunteerLastName" Decode.string

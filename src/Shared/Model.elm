@@ -151,3 +151,16 @@ type alias ConsumableRegister =
     , closedRegister : Bool
     , processingStockChanges : Bool
     }
+
+
+type alias ToolRegister =
+    { id : Int
+    , toolBarcode : String
+    , toolName : String
+    , toolUrlImages : List String
+    , volunteerBuilderAssistantId : String
+    , volunteerName : String
+    , volunteerLastName : String
+    , registerFrom : Posix
+    , registerTo : Maybe Posix
+    }

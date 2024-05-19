@@ -1,4 +1,4 @@
-module Api.Registers.Consumables exposing
+module Api.Registers.Tools exposing
     ( Error
     , delete
     , errorToString
@@ -16,34 +16,29 @@ import Json.Encode as Encode
 import Shared.Json exposing (decodePaginator)
 import Shared.Model
     exposing
-        ( ConsumableRegister
-        , Paginator
+        ( Paginator
+        , ToolRegister
         )
 import Time exposing (Weekday(..))
 import Url.Builder as Url
 
 
-consumableDecoder : Decode.Decoder ConsumableRegister
-consumableDecoder =
-    Decode.succeed ConsumableRegister
+toolDecoder : Decode.Decoder ToolRegister
+toolDecoder =
+    Decode.succeed ToolRegister
         |> Decode.required "id" Decode.int
-        |> Decode.required "consumableBarcode" Decode.string
-        |> Decode.required "consumableName" Decode.string
-        |> Decode.required "consumableUrlImages" (Decode.list Decode.string)
+        |> Decode.required "toolBarcode" Decode.string
+        |> Decode.required "toolName" Decode.string
+        |> Decode.optional "toolUrlImages" (Decode.list Decode.string) []
         |> Decode.required "volunteerBuilderAssistantId" Decode.string
         |> Decode.required "volunteerName" Decode.string
         |> Decode.required "volunteerLastName" Decode.string
-        |> Decode.required "stockAmountRequest" Decode.float
-        |> Decode.optional "stockAmountReturn" (Decode.maybe Decode.float) Nothing
-        |> Decode.required "consumableStockType" Decode.string
         |> Decode.required "registerFrom" Iso8601.decoder
         |> Decode.optional "registerTo" (Decode.maybe Iso8601.decoder) Nothing
-        |> Decode.required "closedRegister" Decode.bool
-        |> Decode.required "processingStockChanges" Decode.bool
 
 
 get :
-    { onResponse : Result Http.Error (Paginator ConsumableRegister) -> msg
+    { onResponse : Result Http.Error (Paginator ToolRegister) -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
     , pageIndex : Int
@@ -57,7 +52,7 @@ get options =
             Http.request
                 { method = "GET"
                 , url =
-                    Url.relative [ options.apiUrl, "resources/consumables/registers" ]
+                    Url.relative [ options.apiUrl, "resources/tools/registers" ]
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
 
@@ -68,7 +63,7 @@ get options =
                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
-                , expect = Http.expectJson options.onResponse <| decodePaginator consumableDecoder
+                , expect = Http.expectJson options.onResponse <| decodePaginator toolDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -91,7 +86,7 @@ delete { onResponse, tokens, apiUrl, registerId } =
                 { method = "DELETE"
                 , url =
                     Url.relative
-                        [ apiUrl, "resources/consumables/registers", String.fromInt registerId ]
+                        [ apiUrl, "resources/tools/registers", String.fromInt registerId ]
                         []
                 , headers =
                     [ Http.header "x-signature-token" tokens.signatureToken
@@ -126,7 +121,7 @@ delete { onResponse, tokens, apiUrl, registerId } =
 --                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
 --                     ]
 --                 , body = Http.emptyBody
---                 , expect = Http.expectJson options.onResponse (Decode.field "data" consumableDecoder)
+--                 , expect = Http.expectJson options.onResponse (Decode.field "data" toolDecoder)
 --                 , timeout = Nothing
 --                 , tracker = Nothing
 --                 }
@@ -152,7 +147,7 @@ delete { onResponse, tokens, apiUrl, registerId } =
 --                     , Http.header "x-header-payload-token" tokens.headerPayloadToken
 --                     ]
 --                 , body = Http.jsonBody jsonBody
---                 , expect = Http.expectJson onResponse (Decode.field "data" consumableDecoder)
+--                 , expect = Http.expectJson onResponse (Decode.field "data" toolDecoder)
 --                 , timeout = Nothing
 --                 , tracker = Nothing
 --                 }

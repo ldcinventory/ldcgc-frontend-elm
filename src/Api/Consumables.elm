@@ -13,6 +13,7 @@ import Iso8601
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Decode
 import Json.Encode as Encode
+import Shared.Json exposing (decodePaginator)
 import Shared.Model
     exposing
         ( Brand
@@ -24,17 +25,6 @@ import Shared.Model
         )
 import Time exposing (Weekday(..))
 import Url.Builder as Url
-
-
-decoder : Decode.Decoder (Paginator Consumable)
-decoder =
-    Decode.field "data" <|
-        (Decode.succeed Paginator
-            |> Decode.required "numElements" Decode.int
-            |> Decode.required "totalPages" Decode.int
-            |> Decode.required "elementsThisPage" Decode.int
-            |> Decode.required "elements" (Decode.list consumableDecoder)
-        )
 
 
 brandDecoder : Decode.Decoder Brand
@@ -124,7 +114,7 @@ get options =
                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
-                , expect = Http.expectJson options.onResponse decoder
+                , expect = Http.expectJson options.onResponse <| decodePaginator consumableDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }

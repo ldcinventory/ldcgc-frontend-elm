@@ -92,7 +92,7 @@ init user shared () =
 
 
 type Msg
-    = PageChanged Int
+    = PageChanged { tools : Bool } Int
     | ChangeCurrentTab Items
     | MenuOptionToggle Int
     | DeleteConsumableRegister ConsumableRegister
@@ -110,15 +110,25 @@ type Msg
 update : Auth.User -> Shared.Model -> Msg -> Model -> ( Model, Effect Msg )
 update user shared msg model =
     case msg of
-        PageChanged pageIndex ->
+        PageChanged { tools } pageIndex ->
             ( { model | pageIndex = pageIndex }
-            , ConsumablesApi.get
-                { onResponse = ConsumableRegistersApiResponded
-                , tokens = user.tokens
-                , apiUrl = shared.apiUrl
-                , pageIndex = pageIndex
-                , filterString = model.filterString
-                }
+            , if tools then
+                ToolsApi.get
+                    { onResponse = ToolRegistersApiResponded
+                    , tokens = user.tokens
+                    , apiUrl = shared.apiUrl
+                    , pageIndex = pageIndex
+                    , filterString = model.filterString
+                    }
+
+              else
+                ConsumablesApi.get
+                    { onResponse = ConsumableRegistersApiResponded
+                    , tokens = user.tokens
+                    , apiUrl = shared.apiUrl
+                    , pageIndex = pageIndex
+                    , filterString = model.filterString
+                    }
             )
 
         ChangeCurrentTab (Tools Loading) ->
@@ -362,6 +372,17 @@ viewConsumableRegister model user consumable =
             [ Attr.class "px-4 py-3"
             ]
             [ Html.text <| Date.format "dd/MM/yyyy" <| Date.fromPosix Time.utc consumable.registerFrom ]
+        , Html.td
+            [ Attr.class "px-4 py-3"
+            ]
+            [ Html.text <|
+                case consumable.registerTo of
+                    Just date ->
+                        Date.format "dd/MM/yyyy" <| Date.fromPosix Time.utc date
+
+                    Nothing ->
+                        "Not returned"
+            ]
         , Html.td
             [ Attr.class "px-4 py-3"
             ]
@@ -672,6 +693,11 @@ view user model =
                                                         [ Attr.scope "col"
                                                         , Attr.class "px-4 py-3"
                                                         ]
+                                                        [ Html.text "Register to" ]
+                                                    , Html.th
+                                                        [ Attr.scope "col"
+                                                        , Attr.class "px-4 py-3"
+                                                        ]
                                                         [ Html.span
                                                             [ Attr.class "sr-only"
                                                             ]
@@ -703,8 +729,8 @@ view user model =
                                         , numItems = consumables.numItems
                                         , totalPages = consumables.totalPages
                                         , elementsThisPage = consumables.elementsThisPage
-                                        , next = PageChanged <| model.pageIndex + 1
-                                        , prev = PageChanged <| model.pageIndex - 1
+                                        , next = PageChanged { tools = False } <| model.pageIndex + 1
+                                        , prev = PageChanged { tools = False } <| model.pageIndex - 1
                                         }
                                     ]
                                 ]
@@ -849,8 +875,8 @@ view user model =
                                         , numItems = tools.numItems
                                         , totalPages = tools.totalPages
                                         , elementsThisPage = tools.elementsThisPage
-                                        , next = PageChanged <| model.pageIndex + 1
-                                        , prev = PageChanged <| model.pageIndex - 1
+                                        , next = PageChanged { tools = True } <| model.pageIndex + 1
+                                        , prev = PageChanged { tools = True } <| model.pageIndex - 1
                                         }
                                     ]
                                 ]

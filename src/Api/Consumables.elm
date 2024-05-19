@@ -84,7 +84,7 @@ consumableDecoder =
         |> Decode.required "name" Decode.string
         |> Decode.required "model" Decode.string
         |> Decode.required "description" Decode.string
-        |> Decode.required "urlImages" (Decode.list Decode.string)
+        |> Decode.optional "urlImages" (Decode.list Decode.string) []
         |> Decode.required "quantityEachItem" Decode.float
         |> Decode.required "stock" Decode.float
         |> Decode.required "minStock" Decode.float

@@ -295,3 +295,20 @@ register =
             ]
             []
         ]
+
+
+plus : Svg msg
+plus =
+    svg
+        [ SvgAttr.class "h-3.5 w-3.5 mr-2"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 20 20"
+        , Attr.attribute "aria-hidden" "true"
+        ]
+        [ path
+            [ SvgAttr.clipRule "evenodd"
+            , SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+            ]
+            []
+        ]

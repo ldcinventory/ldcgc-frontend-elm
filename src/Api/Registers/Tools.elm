@@ -1,9 +1,8 @@
-module Api.Consumables exposing
+module Api.Registers.Tools exposing
     ( Error
     , delete
     , errorToString
     , get
-    , getDetail
     , put
     )
 
@@ -16,79 +15,33 @@ import Json.Encode as Encode
 import Shared.Json exposing (decodePaginator)
 import Shared.Model
     exposing
-        ( Brand
-        , Consumable
-        , Group
-        , Location
-        , Paginator
-        , ResourceType
+        ( Paginator
+        , ToolRegister
         )
 import Time exposing (Weekday(..))
 import Url.Builder as Url
 
 
-brandDecoder : Decode.Decoder Brand
-brandDecoder =
-    Decode.succeed Brand
+toolDecoder : Decode.Decoder ToolRegister
+toolDecoder =
+    Decode.succeed ToolRegister
         |> Decode.required "id" Decode.int
-        |> Decode.required "name" Decode.string
-        |> Decode.optional "locked" Decode.bool False
-
-
-resourceTypeDecoder : Decode.Decoder ResourceType
-resourceTypeDecoder =
-    Decode.succeed ResourceType
-        |> Decode.required "id" Decode.int
-        |> Decode.required "name" Decode.string
-        |> Decode.optional "locked" Decode.bool False
-
-
-locationDecoder : Decode.Decoder Location
-locationDecoder =
-    Decode.succeed Location
-        |> Decode.required "id" Decode.int
-        |> Decode.required "name" Decode.string
-        |> Decode.required "description" Decode.string
-
-
-groupDecoder : Decode.Decoder Group
-groupDecoder =
-    Decode.succeed Group
-        |> Decode.required "id" Decode.int
-        |> Decode.required "name" Decode.string
-        |> Decode.optional "description" (Decode.maybe Decode.string) Nothing
-        |> Decode.optional "urlImage" (Decode.maybe Decode.string) Nothing
-        |> Decode.required "phoneNumber" Decode.string
-        |> Decode.required "location" locationDecoder
-
-
-consumableDecoder : Decode.Decoder Consumable
-consumableDecoder =
-    Decode.succeed Consumable
-        |> Decode.required "id" Decode.int
-        |> Decode.required "barcode" Decode.string
-        |> Decode.required "resourceType" resourceTypeDecoder
-        |> Decode.required "brand" brandDecoder
-        |> Decode.required "price" Decode.float
-        |> Decode.required "purchaseDate" Iso8601.decoder
-        |> Decode.required "name" Decode.string
-        |> Decode.required "model" Decode.string
-        |> Decode.required "description" Decode.string
-        |> Decode.optional "urlImages" (Decode.list Decode.string) []
-        |> Decode.required "quantityEachItem" Decode.float
-        |> Decode.required "stock" Decode.float
-        |> Decode.required "minStock" Decode.float
-        |> Decode.required "location" locationDecoder
-        |> Decode.required "group" groupDecoder
+        |> Decode.required "toolBarcode" Decode.string
+        |> Decode.required "toolName" Decode.string
+        |> Decode.optional "toolUrlImages" (Decode.list Decode.string) []
+        |> Decode.required "volunteerBuilderAssistantId" Decode.string
+        |> Decode.required "volunteerName" Decode.string
+        |> Decode.required "volunteerLastName" Decode.string
+        |> Decode.required "registerFrom" Iso8601.decoder
+        |> Decode.optional "registerTo" (Decode.maybe Iso8601.decoder) Nothing
 
 
 get :
-    { onResponse : Result Http.Error (Paginator Consumable) -> msg
+    { onResponse : Result Http.Error (Paginator ToolRegister) -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
     , pageIndex : Int
     , filterString : String
-    , hasStock : Bool
     }
     -> Effect msg
 get options =
@@ -98,23 +51,17 @@ get options =
             Http.request
                 { method = "GET"
                 , url =
-                    Url.relative [ options.apiUrl, "resources/consumables/loose" ]
+                    Url.relative [ options.apiUrl, "resources/tools/registers" ]
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
-                        , Url.string "filterString" options.filterString
-                        , Url.string "hasStock" <|
-                            if options.hasStock then
-                                "true"
-
-                            else
-                                "false"
+                        , Url.string "tool" options.filterString
                         ]
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken
                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
-                , expect = Http.expectJson options.onResponse <| decodePaginator consumableDecoder
+                , expect = Http.expectJson options.onResponse <| decodePaginator toolDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -126,16 +73,19 @@ delete :
     { onResponse : Result Http.Error String -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
-    , consumableId : Int
+    , registerId : Int
     }
     -> Effect msg
-delete { onResponse, tokens, apiUrl, consumableId } =
+delete { onResponse, tokens, apiUrl, registerId } =
     let
         cmd : Cmd msg
         cmd =
             Http.request
                 { method = "DELETE"
-                , url = Url.relative [ apiUrl, "resources/consumables", String.fromInt consumableId ] []
+                , url =
+                    Url.relative
+                        [ apiUrl, "resources/tools/registers", String.fromInt registerId ]
+                        []
                 , headers =
                     [ Http.header "x-signature-token" tokens.signatureToken
                     , Http.header "x-header-payload-token" tokens.headerPayloadToken
@@ -149,54 +99,27 @@ delete { onResponse, tokens, apiUrl, consumableId } =
     Effect.sendCmd cmd
 
 
-getDetail :
-    { onResponse : Result Http.Error Consumable -> msg
-    , tokens : Shared.Model.Tokens
-    , apiUrl : String
-    , consumableId : String
-    }
-    -> Effect msg
-getDetail options =
-    let
-        cmd : Cmd msg
-        cmd =
-            Http.request
-                { method = "GET"
-                , url = Url.relative [ options.apiUrl, "resources/consumables", options.consumableId ] []
-                , headers =
-                    [ Http.header "x-signature-token" options.tokens.signatureToken
-                    , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
-                    ]
-                , body = Http.emptyBody
-                , expect = Http.expectJson options.onResponse (Decode.field "data" consumableDecoder)
-                , timeout = Nothing
-                , tracker = Nothing
-                }
-    in
-    Effect.sendCmd cmd
-
-
 put :
-    { onResponse : Result Http.Error Consumable -> msg
+    { onResponse : Result Http.Error ToolRegister -> msg
     , tokens : Shared.Model.Tokens
     , apiUrl : String
     , jsonBody : Encode.Value
-    , consumableId : String
+    , registerId : String
     }
     -> Effect msg
-put { onResponse, tokens, apiUrl, consumableId, jsonBody } =
+put { onResponse, tokens, apiUrl, registerId, jsonBody } =
     let
         cmd : Cmd msg
         cmd =
             Http.request
                 { method = "PUT"
-                , url = Url.relative [ apiUrl, "resources/consumables", consumableId ] []
+                , url = Url.relative [ apiUrl, "resources/tools/registers", registerId ] []
                 , headers =
                     [ Http.header "x-signature-token" tokens.signatureToken
                     , Http.header "x-header-payload-token" tokens.headerPayloadToken
                     ]
                 , body = Http.jsonBody jsonBody
-                , expect = Http.expectJson onResponse (Decode.field "data" consumableDecoder)
+                , expect = Http.expectJson onResponse (Decode.field "data" toolDecoder)
                 , timeout = Nothing
                 , tracker = Nothing
                 }

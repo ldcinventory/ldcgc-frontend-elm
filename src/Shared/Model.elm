@@ -17,6 +17,7 @@ type alias Model =
     { user : Maybe User
     , apiUrl : String
     , tray : Toast.Tray To.Toast
+    , time : Posix
     }
 
 
@@ -132,4 +133,35 @@ type alias Consumable =
     , minStock : Float
     , location : Location
     , group : Group
+    }
+
+
+type alias ConsumableRegister =
+    { id : Int
+    , consumableBarcode : String
+    , consumableName : String
+    , consumableUrlImages : List String
+    , volunteerBuilderAssistantId : String
+    , volunteerName : String
+    , volunteerLastName : String
+    , stockAmountRequest : Float
+    , stockAmountReturn : Maybe Float
+    , consumableStockType : String
+    , registerFrom : Posix
+    , registerTo : Maybe Posix
+    , closedRegister : Bool
+    , processingStockChanges : Bool
+    }
+
+
+type alias ToolRegister =
+    { id : Int
+    , toolBarcode : String
+    , toolName : String
+    , toolUrlImages : List String
+    , volunteerBuilderAssistantId : String
+    , volunteerName : String
+    , volunteerLastName : String
+    , registerFrom : Posix
+    , registerTo : Maybe Posix
     }

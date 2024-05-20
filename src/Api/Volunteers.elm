@@ -15,21 +15,10 @@ import Json.Encode as Encode
 import Maybe.Extra as Maybe
 import Regex exposing (Regex)
 import Set.Any as Set
-import Shared.Json
+import Shared.Json exposing (decodePaginator)
 import Shared.Model exposing (Absence, Paginator, Volunteer, VolunteerDetail)
 import Time exposing (Weekday(..))
 import Url.Builder as Url
-
-
-decoder : Decode.Decoder (Paginator Volunteer)
-decoder =
-    Decode.field "data" <|
-        (Decode.succeed Paginator
-            |> Decode.required "numElements" Decode.int
-            |> Decode.required "totalPages" Decode.int
-            |> Decode.required "elementsThisPage" Decode.int
-            |> Decode.required "elements" (Decode.list volunteerDecoder)
-        )
 
 
 messageDecoder : Decode.Decoder String
@@ -98,7 +87,7 @@ get options =
                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
                     ]
                 , body = Http.emptyBody
-                , expect = Http.expectJson options.onResponse decoder
+                , expect = Http.expectJson options.onResponse <| decodePaginator volunteerDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }

@@ -1,6 +1,7 @@
 module Shared.Json exposing
     ( decodeAbsence
     , decodeAvailability
+    , decodePaginator
     , decodeRole
     , decodeUser
     , encodeConsumable
@@ -14,7 +15,7 @@ import Json.Decode.Pipeline as Decode
 import Json.Encode as Encode exposing (Value)
 import Json.Encode.Extra as Encode
 import Set.Any as Set
-import Shared.Model exposing (Role(..), User)
+import Shared.Model exposing (Paginator, Role(..), User)
 import Time exposing (Weekday(..))
 
 
@@ -221,3 +222,14 @@ encodeConsumable details =
         , ( "location", encodeLocation details.location )
         , ( "group", encodeGroup details.group )
         ]
+
+
+decodePaginator : Decoder a -> Decode.Decoder (Paginator a)
+decodePaginator decoder =
+    Decode.field "data" <|
+        (Decode.succeed Paginator
+            |> Decode.required "numElements" Decode.int
+            |> Decode.required "totalPages" Decode.int
+            |> Decode.required "elementsThisPage" Decode.int
+            |> Decode.required "elements" (Decode.list decoder)
+        )

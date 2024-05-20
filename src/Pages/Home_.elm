@@ -4,17 +4,15 @@ import Auth
 import Effect exposing (Effect)
 import Html
 import Html.Attributes as Attr
-import Jwt
 import Layouts
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
-import Time
 import View exposing (View)
 
 
 page : Auth.User -> Shared.Model -> Route () -> Page Model Msg
-page user shared route =
+page user _ _ =
     Page.new
         { init = init user
         , update = update
@@ -25,7 +23,7 @@ page user shared route =
 
 
 toLayout : Auth.User -> Model -> Layouts.Layout msg
-toLayout user model =
+toLayout user _ =
     Layouts.Sidebar
         { title = "Dashboard"
         , user = user
@@ -41,13 +39,7 @@ type alias Model =
 
 
 init : Auth.User -> () -> ( Model, Effect Msg )
-init user () =
-    let
-        expiry : Result Jwt.JwtError Time.Posix
-        expiry =
-            -- FIXME: delete this when we actually read the expiry of the token
-            Result.map Time.millisToPosix << Jwt.getTokenExpirationMillis <| user.tokens.headerPayloadToken ++ "." ++ user.tokens.signatureToken
-    in
+init _ () =
     ( {}
     , Effect.none
     )
@@ -75,7 +67,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -84,7 +76,7 @@ subscriptions model =
 
 
 view : Model -> View Msg
-view model =
+view _ =
     { title = "Dashboard"
     , body =
         [ Html.div

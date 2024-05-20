@@ -41,14 +41,16 @@ dashboard =
         ]
 
 
-tools : Svg msg
-tools =
+tools : List (Svg.Attribute msg) -> Svg msg
+tools attrs =
     svg
-        [ SvgAttr.class "flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-        , Attr.attribute "aria-hidden" "true"
-        , SvgAttr.fill "currentColor"
-        , SvgAttr.viewBox "0 0 18 18"
-        ]
+        ([ SvgAttr.class "flex-shrink-0 w-5 h-5 transition duration-75  group-hover:text-gray-900 dark:group-hover:text-white"
+         , Attr.attribute "aria-hidden" "true"
+         , SvgAttr.fill "currentColor"
+         , SvgAttr.viewBox "0 0 18 18"
+         ]
+            ++ attrs
+        )
         [ path
             [ SvgAttr.d "M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z"
             ]
@@ -256,11 +258,31 @@ close =
         ]
 
 
-clock : Svg msg
-clock =
+clock : List (Svg.Attribute msg) -> Svg msg
+clock attrs =
+    svg
+        ([ SvgAttr.class "flex-shrink-0 w-5 h-5 transition duration-75  group-hover:text-gray-900 dark:group-hover:text-white"
+         , Attr.attribute "aria-hidden" "true"
+         , SvgAttr.width "24"
+         , SvgAttr.height "24"
+         , SvgAttr.fill "currentColor"
+         , SvgAttr.viewBox "0 0 24 24"
+         ]
+            ++ attrs
+        )
+        [ path
+            [ SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
+            , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]
+
+
+register : Svg msg
+register =
     svg
         [ SvgAttr.class "flex-shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-        , Attr.attribute "aria-hidden" "true"
         , SvgAttr.width "24"
         , SvgAttr.height "24"
         , SvgAttr.fill "currentColor"
@@ -268,8 +290,25 @@ clock =
         ]
         [ path
             [ SvgAttr.fillRule "evenodd"
-            , SvgAttr.d "M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
+            , SvgAttr.d "M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Zm4.996 2a1 1 0 0 0 0 2h.01a1 1 0 1 0 0-2h-.01ZM11 8a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-6Zm-4.004 3a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01ZM11 11a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-6Zm-4.004 3a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2h-.01ZM11 14a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-6Z"
             , SvgAttr.clipRule "evenodd"
+            ]
+            []
+        ]
+
+
+plus : Svg msg
+plus =
+    svg
+        [ SvgAttr.class "h-3.5 w-3.5 mr-2"
+        , SvgAttr.fill "currentColor"
+        , SvgAttr.viewBox "0 0 20 20"
+        , Attr.attribute "aria-hidden" "true"
+        ]
+        [ path
+            [ SvgAttr.clipRule "evenodd"
+            , SvgAttr.fillRule "evenodd"
+            , SvgAttr.d "M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
             ]
             []
         ]

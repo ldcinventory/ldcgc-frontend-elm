@@ -276,6 +276,7 @@ viewConsumableRegister model user consumable =
                             ]
                             [ Html.li []
                                 [ Html.a
+                                    -- FIXME: call PUT endoint here to Return the consumable
                                     [ -- Route.Path.href <|
                                       -- Route.Path.ConsumableRegisters_ConsumableRegisterId_
                                       --     { consumableId = String.fromInt consumable.id }

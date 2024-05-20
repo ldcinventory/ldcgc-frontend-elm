@@ -3,8 +3,7 @@ module Api.Registers.Consumables exposing
     , delete
     , errorToString
     , get
-      -- , getDetail
-      -- , put
+    , put
     )
 
 import Effect exposing (Effect)
@@ -105,58 +104,32 @@ delete { onResponse, tokens, apiUrl, registerId } =
     Effect.sendCmd cmd
 
 
-
--- getDetail :
---     { onResponse : Result Http.Error Consumable -> msg
---     , tokens : Shared.Model.Tokens
---     , apiUrl : String
---     , consumableId : String
---     }
---     -> Effect msg
--- getDetail options =
---     let
---         cmd : Cmd msg
---         cmd =
---             Http.request
---                 { method = "GET"
---                 , url = Url.relative [ options.apiUrl, "resources/consumables", options.consumableId ] []
---                 , headers =
---                     [ Http.header "x-signature-token" options.tokens.signatureToken
---                     , Http.header "x-header-payload-token" options.tokens.headerPayloadToken
---                     ]
---                 , body = Http.emptyBody
---                 , expect = Http.expectJson options.onResponse (Decode.field "data" consumableDecoder)
---                 , timeout = Nothing
---                 , tracker = Nothing
---                 }
---     in
---     Effect.sendCmd cmd
--- put :
---     { onResponse : Result Http.Error Consumable -> msg
---     , tokens : Shared.Model.Tokens
---     , apiUrl : String
---     , jsonBody : Encode.Value
---     , consumableId : String
---     }
---     -> Effect msg
--- put { onResponse, tokens, apiUrl, consumableId, jsonBody } =
---     let
---         cmd : Cmd msg
---         cmd =
---             Http.request
---                 { method = "PUT"
---                 , url = Url.relative [ apiUrl, "resources/consumables", consumableId ] []
---                 , headers =
---                     [ Http.header "x-signature-token" tokens.signatureToken
---                     , Http.header "x-header-payload-token" tokens.headerPayloadToken
---                     ]
---                 , body = Http.jsonBody jsonBody
---                 , expect = Http.expectJson onResponse (Decode.field "data" consumableDecoder)
---                 , timeout = Nothing
---                 , tracker = Nothing
---                 }
---     in
---     Effect.sendCmd cmd
+put :
+    { onResponse : Result Http.Error ConsumableRegister -> msg
+    , tokens : Shared.Model.Tokens
+    , apiUrl : String
+    , jsonBody : Encode.Value
+    , registerId : String
+    }
+    -> Effect msg
+put { onResponse, tokens, apiUrl, registerId, jsonBody } =
+    let
+        cmd : Cmd msg
+        cmd =
+            Http.request
+                { method = "PUT"
+                , url = Url.relative [ apiUrl, "resources/consumables/registers", registerId ] []
+                , headers =
+                    [ Http.header "x-signature-token" tokens.signatureToken
+                    , Http.header "x-header-payload-token" tokens.headerPayloadToken
+                    ]
+                , body = Http.jsonBody jsonBody
+                , expect = Http.expectJson onResponse (Decode.field "data" consumableDecoder)
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+    in
+    Effect.sendCmd cmd
 
 
 messageDecoder : Decode.Decoder String

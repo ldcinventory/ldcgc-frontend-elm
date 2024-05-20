@@ -272,6 +272,7 @@ viewToolRegister model user tool =
                             ]
                             [ Html.li []
                                 [ Html.a
+                                    -- FIXME: call PUT endoint here to Return the tool
                                     [ -- Route.Path.href <|
                                       -- Route.Path.ConsumableRegisters_ConsumableRegisterId_
                                       --     { consumableId = String.fromInt consumable.id }

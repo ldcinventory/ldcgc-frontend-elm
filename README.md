@@ -20,12 +20,12 @@ about deploying your app for free using Netlify or Vercel.
 
 ## TODO:
 
-- [ ] Implement password recovery workflow
-- [ ] Convince backend to use Bearer token and simplify all API calls... 🙏🏻
-- [ ] Check expiry token on session reconnect and redirect to Sign in if expired
-- [ ] Only store user in localStorage if ✅ Remember me
-- [ ] Implement tools page
 - [x] Implement register tools tab (register page)
 - [x] Implement register consumables tab (register page)
+- [x] Check expiry token on session reconnect and redirect to Sign in if expired
+- [ ] Implement password recovery workflow
+- [ ] Convince backend to use Bearer token and simplify all API calls... 🙏🏻
+- [ ] Only store user in localStorage if ✅ Remember me
+- [ ] Implement tools page
 - [ ] Use [elm-select](https://github.com/sporto/elm-select/tree/6.2.1) for Registering tools/consumables
 - [ ] Extract Components/Modal and re-use it!

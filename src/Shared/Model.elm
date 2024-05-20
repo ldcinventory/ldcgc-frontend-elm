@@ -17,6 +17,7 @@ type alias Model =
     { user : Maybe User
     , apiUrl : String
     , tray : Toast.Tray To.Toast
+    , time : Posix
     }
 
 

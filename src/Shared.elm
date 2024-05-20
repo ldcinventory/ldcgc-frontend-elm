@@ -21,6 +21,8 @@ import Route.Path
 import Shared.Json exposing (decodeUser)
 import Shared.Model
 import Shared.Msg
+import Task
+import Time
 import Toast
 
 
@@ -60,8 +62,9 @@ init flagsResult _ =
     ( { user = flags.user
       , apiUrl = flags.apiUrl
       , tray = Toast.tray
+      , time = Time.millisToPosix 0
       }
-    , Effect.none
+    , Effect.sendCmd <| Task.perform Shared.Msg.SetCurrentTime Time.now
     )
 
 
@@ -110,6 +113,11 @@ update route msg model =
         Shared.Msg.SignOut ->
             ( { model | user = Nothing }
             , Effect.clearUser
+            )
+
+        Shared.Msg.SetCurrentTime time ->
+            ( { model | time = time }
+            , Effect.none
             )
 
         Shared.Msg.ToastMsg toastMsg ->

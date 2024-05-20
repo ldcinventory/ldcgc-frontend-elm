@@ -55,8 +55,7 @@ get options =
                     Url.relative [ options.apiUrl, "resources/tools/registers" ]
                         [ Url.string "size" "10"
                         , Url.string "pageIndex" <| String.fromInt options.pageIndex
-
-                        -- , Url.string "filterString" options.filterString
+                        , Url.string "tool" options.filterString
                         ]
                 , headers =
                     [ Http.header "x-signature-token" options.tokens.signatureToken

@@ -17,6 +17,7 @@ import Layout exposing (Layout)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Svg.Attributes as SvgAttr
 import Toast
 import View exposing (View)
 
@@ -216,7 +217,7 @@ viewSidebar model =
                             [ Route.Path.href <| Route.Path.Tools
                             , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
-                            [ Icon.tools
+                            [ Icon.tools [ SvgAttr.class "text-gray-400 dark:text-gray-400" ]
                             , span
                                 [ Attr.class "flex-1 ms-3 whitespace-nowrap"
                                 ]
@@ -228,7 +229,7 @@ viewSidebar model =
                             [ Route.Path.href <| Route.Path.Consumables
                             , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
-                            [ Icon.clock
+                            [ Icon.clock [ SvgAttr.class "text-gray-400 dark:text-gray-400" ]
                             , span
                                 [ Attr.class "flex-1 ms-3 whitespace-nowrap"
                                 ]
@@ -237,7 +238,7 @@ viewSidebar model =
                         ]
                     , li []
                         [ a
-                            [ Route.Path.href <| Route.Path.Registers
+                            [ Route.Path.href <| Route.Path.Registers_Consumables
                             , Attr.class "flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
                             ]
                             [ Icon.register

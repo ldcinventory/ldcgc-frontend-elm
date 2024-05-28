@@ -32,8 +32,10 @@ about deploying your app for free using Netlify or Vercel.
 - [x] Implement responsive sidebar menu
 - [x] Implement volunteers page
 - [x] Move notifications to Sidebar.elm
+- [x] Implement consumables page
 - [ ] Implement password recovery workflow
+- [ ] Check expiry token on session reconnect and redirect to Sign in if expired
 - [ ] Only store user in localStorage if ✅ Remember me
 - [ ] Extract Components/Modal and re-use it!
 - [ ] Implement tools page
-- [ ] Implement consumables page
+- [ ] Use [elm-select](https://github.com/sporto/elm-select/tree/6.2.1) for Registering tools/consumables

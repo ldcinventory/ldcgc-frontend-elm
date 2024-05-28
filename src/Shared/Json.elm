@@ -3,6 +3,7 @@ module Shared.Json exposing
     , decodeAvailability
     , decodeRole
     , decodeUser
+    , encodeConsumable
     , encodeUser
     , encodeVolunteerDetail
     )
@@ -160,7 +161,63 @@ encodeVolunteerDetail volunteerDetails =
         , ( "name", Encode.string volunteerDetails.name )
         , ( "lastName", Encode.string volunteerDetails.lastName )
         , ( "builderAssistantId", Encode.string volunteerDetails.builderAssistantId )
-        , ( "isActive", Encode.bool volunteerDetails.isActive )
         , ( "absences", Encode.list Encode.string [] )
         , ( "availability", Set.encode encodeWeekday volunteerDetails.availability )
+        ]
+
+
+encodeBrand : Shared.Model.Brand -> Encode.Value
+encodeBrand brand =
+    Encode.object
+        [ ( "id", Encode.int brand.id )
+        , ( "name", Encode.string brand.name )
+        , ( "locked", Encode.bool brand.locked )
+        ]
+
+
+encodeResourceType : Shared.Model.ResourceType -> Encode.Value
+encodeResourceType rt =
+    Encode.object
+        [ ( "id", Encode.int rt.id )
+        , ( "name", Encode.string rt.name )
+        , ( "locked", Encode.bool rt.locked )
+        ]
+
+
+encodeLocation : Shared.Model.Location -> Encode.Value
+encodeLocation loc =
+    Encode.object
+        [ ( "id", Encode.int loc.id )
+        , ( "name", Encode.string loc.name )
+        , ( "description", Encode.string loc.description )
+        ]
+
+
+encodeGroup : Shared.Model.Group -> Encode.Value
+encodeGroup group =
+    Encode.object
+        [ ( "id", Encode.int group.id )
+        , ( "name", Encode.string group.name )
+        , ( "description", Encode.maybe Encode.string group.description )
+        , ( "urlImage", Encode.maybe Encode.string group.urlImage )
+        , ( "phoneNumber", Encode.string group.phoneNumber )
+        , ( "location", encodeLocation group.location )
+        ]
+
+
+encodeConsumable : Shared.Model.Consumable -> Encode.Value
+encodeConsumable details =
+    Encode.object
+        [ ( "id", Encode.int details.id )
+        , ( "name", Encode.string details.name )
+        , ( "brand", encodeBrand details.brand )
+        , ( "resourceType", encodeResourceType details.resourceType )
+        , ( "barcode", Encode.string details.barcode )
+        , ( "model", Encode.string details.model )
+        , ( "description", Encode.string details.description )
+        , ( "quantityEachItem", Encode.float details.quantityEachItem )
+        , ( "stock", Encode.float details.stock )
+        , ( "minStock", Encode.float details.minStock )
+        , ( "location", encodeLocation details.location )
+        , ( "group", encodeGroup details.group )
         ]

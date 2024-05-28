@@ -7,7 +7,7 @@ port module Effect exposing
     , map, toCmd
     , saveUser, clearUser
     , pushPath, replacePath
-    , sendToast, sendToastMsg
+    , delayMsg, sendToast, sendToastMsg
     )
 
 {-|
@@ -29,6 +29,7 @@ import Dict exposing (Dict)
 import Html.Attributes exposing (value)
 import Json.Encode as Encode
 import Json.Encode.Extra as Encode
+import Process
 import Route
 import Route.Path
 import Shared.Json exposing (encodeUser)
@@ -262,3 +263,9 @@ sendToast message toastType =
 sendToastMsg : Toast.Msg -> Effect msg
 sendToastMsg msg =
     SendSharedMsg <| Shared.Msg.ToastMsg msg
+
+
+delayMsg : msg -> Effect msg
+delayMsg msg =
+    Task.perform (always msg) (Process.sleep 500)
+        |> sendCmd
